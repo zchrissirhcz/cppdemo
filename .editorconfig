@@ -1,0 +1,18 @@
+root = true
+
+[*]
+charset = utf-8
+
+[*.{h,hpp,c,cpp}]
+indent_style = space
+indent_size = 4
+
+[CMakeLists.txt,*.cmake]
+indent_style = space
+indent_size = 2
+
+[*.{bat,cmd,ps1}]
+end_of_line = crlf
+
+[*.sh]
+end_of_line = lf
