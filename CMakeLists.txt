@@ -14,7 +14,11 @@ if(MSVC)
   add_compile_options("/source-charset:utf-8")
 endif()
 
+include(cmake/igl_copy_dll.cmake)
+
 ######################################################################
 # Define targets
 ######################################################################
-add_executable(demo demo.cpp)
+add_subdirectory(demo1)
+add_subdirectory(demo2)
+add_subdirectory(demo3)
