@@ -1,0 +1,5 @@
+if(DEFINED ENV{ZZPKG_ROOT})
+  set(ZZPKG_ROOT $ENV{ZZPKG_ROOT})
+else()
+  set(ZZPKG_ROOT "~/.zzpkg")
+endif()

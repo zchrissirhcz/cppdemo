@@ -15,6 +15,7 @@ if(MSVC)
 endif()
 
 include(cmake/igl_copy_dll.cmake)
+include(cmake/zzpkg.cmake)
 
 ######################################################################
 # Define targets
