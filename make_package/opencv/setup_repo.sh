@@ -25,6 +25,34 @@ normalize_git_url() {
     esac
 }
 
+# 检查是否需要更新（基于时间戳）
+should_update_repo() {
+    local repo_path="$1"
+    local cache_minutes="${GIT_CACHE_MINUTES:-5}"  # 默认 5 分钟缓存
+    local timestamp_file="$repo_path/.git/last_fetch"
+    
+    if [[ ! -f "$timestamp_file" ]]; then
+        return 0  # 没有时间戳，需要更新
+    fi
+    
+    local last_fetch=$(cat "$timestamp_file")
+    local now=$(date +%s)
+    local age=$((now - last_fetch))
+    
+    if [[ $age -gt $((cache_minutes * 60)) ]]; then
+        return 0  # 超过缓存时间，需要更新
+    fi
+    
+    echo "⚡ Skipping git operations (last updated $((age / 60)) min ago)"
+    return 1  # 不需要更新
+}
+
+# 记录更新时间
+mark_repo_updated() {
+    local repo_path="$1"
+    date +%s > "$repo_path/.git/last_fetch"
+}
+
 setup_repo() {
     local repo_name="$1"
     local official_url="$2"
@@ -34,6 +62,7 @@ setup_repo() {
 
     local repo_path="$work_dir/$repo_name"
 
+    # Clone if not exists
     if [ ! -d "$repo_path" ]; then
         echo "Cloning $repo_name from mirror..."
         git clone "$mirror_url" "$repo_path" || {
@@ -43,8 +72,16 @@ setup_repo() {
                 return 1
             }
         }
+        mark_repo_updated "$repo_path"
     fi
 
+    # 检查是否需要更新
+    if ! should_update_repo "$repo_path"; then
+        echo "✅ Repository $repo_name ready (cached)."
+        return 0
+    fi
+
+    # Remote management
     local current_origin
     current_origin=$(git -C "$repo_path" remote get-url origin 2>/dev/null)
 
@@ -62,6 +99,7 @@ setup_repo() {
         git -C "$repo_path" fetch origin --tags
     fi
 
+    # Checkout target ref
     if [ -n "$target_ref" ]; then
         echo "Checking out: $target_ref"
         if git -C "$repo_path" show-ref --verify --quiet "refs/tags/$target_ref"; then
@@ -81,5 +119,6 @@ setup_repo() {
         git -C "$repo_path" pull --rebase
     fi
 
+    mark_repo_updated "$repo_path"
     echo "✅ Repository $repo_name ready."
 }

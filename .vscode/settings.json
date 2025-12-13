@@ -1,5 +1,7 @@
 {
-    "cmake.generator": "Visual Studio 18 2026",
+    // set(OpenCV_RUNTIME "vc17")   
+    //"cmake.generator": "Visual Studio 18 2026",
+    "cmake.generator": "Visual Studio 17 2022",
     "cmake.configureArgs": [
         "-T host=x64"
     ]
