@@ -3,6 +3,7 @@ if(DEFINED ENV{ZZPKG_ROOT})
 else()
   set(ZZPKG_ROOT "~/.zzpkg")
 endif()
+file(TO_CMAKE_PATH "${ZZPKG_ROOT}" ZZPKG_ROOT)
 
 
 # Set default installation directory
