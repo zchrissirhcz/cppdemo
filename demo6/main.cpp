@@ -1,4 +1,6 @@
+#if _MSC_VER
 #include "windef.h"
+#endif
 
 // Win32 style structure definition example
 //

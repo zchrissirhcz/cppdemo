@@ -1,23 +1,26 @@
 #!/bin/bash
 set -euo pipefail
 
-# 如果 SKIP_CLONE 被设为非空值，则跳过 setup_repo 调用
+# 如果 SKIP_CLONE 被设为非空值，则跳过 checkout_repo 调用
 : "${SKIP_CLONE:=}"
 
-source setup_repo.sh
+source ../checkout_repo.sh
 
 # === Main ===
 work_dir=$(pwd)
 tag="4.12.0"
+version="$tag"
+pkg_name="opencv"
+source_dir="$work_dir/opencv"
 
 if [[ -z "$SKIP_CLONE" ]]; then
-    setup_repo "opencv" \
+    checkout_repo "opencv" \
             "https://github.com/opencv/opencv.git" \
             "https://gitee.com/opencv/opencv.git" \
             "$work_dir" \
             "$tag"
 
-    setup_repo "opencv_contrib" \
+    checkout_repo "opencv_contrib" \
             "https://github.com/opencv/opencv_contrib.git" \
             "https://gitee.com/opencv/opencv_contrib.git" \
             "$work_dir" \

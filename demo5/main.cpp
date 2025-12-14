@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#if _MSC_VER
 #include <Windows.h>
+#endif
 #include <algorithm>
 
 void M_PI_demo()

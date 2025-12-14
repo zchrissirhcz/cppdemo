@@ -53,7 +53,7 @@ mark_repo_updated() {
     date +%s > "$repo_path/.git/last_fetch"
 }
 
-setup_repo() {
+checkout_repo() {
     local repo_name="$1"
     local official_url="$2"
     local mirror_url="$3"

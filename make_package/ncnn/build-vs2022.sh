@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SKIP_CLONE=1 source checkout_ocv_4.12.0.sh
+source checkout_ncnn_master.sh
 
 set -x
 
@@ -16,7 +16,7 @@ CMAKE_GENERATOR_OPTIONS=(-G"Visual Studio 17 2022" -A x64)
 #CMAKE_GENERATOR_OPTIONS=(-G"Visual Studio 18 2026" -A x64)
 
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"
-install_dir="$ZZPKG_ROOT/${pkg_name}/$version/vs2022-x64"
+install_dir="$ZZPKG_ROOT/$pkg_name/$version/vs2022-x64"
 cmake "${CMAKE_GENERATOR_OPTIONS[@]}" "${CMAKE_OPTIONS[@]}" \
       -DCMAKE_INSTALL_PREFIX="$install_dir" \
       -S "$source_dir" -B "$build_dir" -Wno-deprecated

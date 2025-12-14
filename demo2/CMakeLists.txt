@@ -1,5 +1,8 @@
-set(ncnn_DIR "${ZZPKG_ROOT}/ncnn/20250916/windows-vs2022-shared/x64/lib/cmake/ncnn")
-find_package(ncnn REQUIRED)
+zzpkg_find(ncnn
+  WINDOWS "${ZZPKG_ROOT}/ncnn/master/vs2022-x64"
+  LINUX   "${ZZPKG_ROOT}/ncnn/master/linux-x64"
+  ANDROID "${ZZPKG_ROOT}/ncnn/master/android-arm64"
+)
 
 add_executable(demo2 demo2.cpp)
 target_link_libraries(demo2 PRIVATE ncnn)
