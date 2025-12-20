@@ -17,13 +17,13 @@ if [[ -z "$SKIP_CLONE" ]]; then
     checkout_repo "opencv" \
             "https://github.com/opencv/opencv.git" \
             "https://gitee.com/opencv/opencv.git" \
-            "$work_dir" \
+            "$work_dir/opencv" \
             "$tag"
 
     checkout_repo "opencv_contrib" \
             "https://github.com/opencv/opencv_contrib.git" \
             "https://gitee.com/opencv/opencv_contrib.git" \
-            "$work_dir" \
+            "$work_dir/opencv_contrib" \
             "$tag"
 fi
 

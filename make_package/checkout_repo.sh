@@ -57,10 +57,20 @@ checkout_repo() {
     local repo_name="$1"
     local official_url="$2"
     local mirror_url="$3"
-    local work_dir="${4:-$(pwd)}"
+    local repo_path="$4"
     local target_ref="$5"
 
-    local repo_path="$work_dir/$repo_name"
+    # Handle existing directory that is not a git repo
+    if [ -d "$repo_path" ] && [ ! -d "$repo_path/.git" ]; then
+        echo "⚠️  Directory '$repo_path' exists but is not a git repository."
+        if [ -z "$(ls -A "$repo_path")" ]; then
+            echo "   Directory is empty. Removing to proceed with clone..."
+            rmdir "$repo_path"
+        else
+            echo "❌ Error: Directory is not empty and not a git repository. Please remove it manually." >&2
+            return 1
+        fi
+    fi
 
     # Clone if not exists
     if [ ! -d "$repo_path" ]; then
