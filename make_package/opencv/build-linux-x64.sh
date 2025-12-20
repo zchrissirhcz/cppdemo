@@ -4,7 +4,7 @@ source checkout_ocv_4.12.0.sh
 
 set -x
 
-build_dir="$work_dir/build-linux"
+build_dir="$work_dir/build-linux-x64"
 
 # Clean build
 # [ -d "$build_dir" ] && rm -rf "$build_dir"
