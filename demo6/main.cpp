@@ -1,6 +1,8 @@
 #if _MSC_VER
-#include "windef.h"
+#include <Windows.h>
+#include <windef.h>
 #endif
+#include <stdio.h>
 
 // Win32 style structure definition example
 //
@@ -12,5 +14,5 @@
 
 int main()
 {
-    
+    printf("_MSVC_LANG is %d\n", _MSVC_LANG);
 }
