@@ -14,5 +14,7 @@
 
 int main()
 {
+#if _MSC_VER
     printf("_MSVC_LANG is %d\n", _MSVC_LANG);
+#endif
 }

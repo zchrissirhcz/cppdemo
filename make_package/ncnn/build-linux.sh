@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SKIP_CLONE=1 source checkout_ncnn_master.sh
+source checkout_ncnn_master.sh
 
 set -x
 
