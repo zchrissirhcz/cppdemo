@@ -4,6 +4,64 @@
     "cmake.generator": "Visual Studio 17 2022",
     "cmake.configureArgs": [
         "-T host=x64"
-    ]
+    ],
     //"cmake.generator": "Ninja"
+
+
+    // linux-gdb
+    // // https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/cmake-settings.md
+    // "cmake.debugConfig": {
+    //     "MIMode": "gdb",
+    //     "args": [],
+    //     "console": "integratedTerminal",
+    //     "logging": {
+    //         "engineLogging": false,
+    //         "exceptions": true,
+    //         "moduleLoad": false,
+    //         "programOutput": true,
+    //         "trace": false,
+    //         "traceResponse": false
+    //     },
+    //     "setupCommands": [
+    //         {
+    //             "description": "Enable pretty-printing for gdb",
+    //             "text": "-enable-pretty-printing",
+    //             "ignoreFailures": false
+    //         }
+    //     ]
+    // }
+
+    // windows
+    // https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/cmake-settings.md
+    // "cmake.debugConfig": {
+    //     "args": [],
+    //     "console": "integratedTerminal"
+    // },
+
+    /// macOS
+    // https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/cmake-settings.md
+    "cmake.debugConfig": {
+        "MIMode": "lldb",
+        "args": [],
+        "console": "integratedTerminal",
+        "setupCommands": [
+            {
+                // https://github.com/microsoft/vscode-cpptools/issues/6930
+                "description": "Enable Stepping into STL",
+                "ignoreFailures": false,
+                "text": "settings set target.process.thread.step-avoid-regexp ''"
+            }
+        ]
+    },
+    "lldb.library": "/Library/Developer/CommandLineTools/Library/PrivateFrameworks/LLDB.framework/Versions/A/LLDB",
+
+
+    // android
+    // "cmake.configureArgs": [
+    //     "-DCMAKE_TOOLCHAIN_FILE=C:/soft/toolchains/android-ndk-r27c/build/cmake/android.toolchain.cmake",
+    //     "-DANDROID_ABI=arm64-v8a",
+    //     "-DANDROID_PLATFORM=21",
+    // ],
+
+    // C_Cpp.intelliSenseEngine": "disabled",
 }

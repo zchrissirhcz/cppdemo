@@ -5,16 +5,114 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Demo3",
+            // https://learn.microsoft.com/en-us/visualstudio/debugger/debugger-feature-tour?view=vs-2022
+            "name": "cpptools-msvc",
             "type": "cppvsdbg",
+            "program": "${input:programPath}",
             "request": "launch",
-            "program": "${workspaceFolder}/build/demo3/Debug/demo3.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "console": "integratedTerminal",
-            //"preLaunchTask": "CMake: build demo3"
+            "console": "integratedTerminal"
+        },
+        {
+            // https://learn.microsoft.com/en-us/visualstudio/debugger/debugger-feature-tour?view=vs-2022
+            "name": "cpptools-gdb",
+            "type": "cppdbg",
+            "MIMode": "gdb",
+            "program": "${input:programPath}",
+            "request": "launch",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": []
+        },
+        {
+            "name": "cpptools-lldb",
+            "type": "cppdbg",
+            "MIMode": "lldb",
+            "program": "${input:programPath}",
+            "request": "launch",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": []
+        },
+        {
+            "name": "codelldb-gdb",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${input:programPath}",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}",
+            "env": {},
+        },
+        {
+            "name": "codelldb-lldb",
+            "type": "lldb",
+            "request": "launch",
+            //"program": "${workspaceFolder}/build/demo3/demo3",
+            "program": "${input:programPath}",
+            "args": [],
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "initCommands": [
+                //"command script import ${env:HOME}/.lldb/debugview.py"
+                "command script import ${workspaceFolder}/image_viewer/debugview.py"
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "programPath",
+            "type": "pickString",
+            "description": "选择要调试的程序",
+            "options": [
+                {
+                    "label": "demo1",
+                    "value": "${workspaceFolder}/build/demo1/demo1"
+                },
+                {
+                    "label": "demo2",
+                    "value": "${workspaceFolder}/build/demo2/demo2"
+                },
+                {
+                    "label": "demo3",
+                    "value": "${workspaceFolder}/build/demo3/demo3"
+                },
+                {
+                    "label": "demo5",
+                    "value": "${workspaceFolder}/build/demo5/demo5"
+                },
+                {
+                    "label": "demo6",
+                    "value": "${workspaceFolder}/build/demo6/demo6"
+                },
+                {
+                    "label": "demo7",
+                    "value": "${workspaceFolder}/build/demo7/demo7"
+                },
+                {
+                    "label": "demo8",
+                    "value": "${workspaceFolder}/build/demo8/demo8"
+                },
+                {
+                    "label": "use_foo",
+                    "value": "${workspaceFolder}/build/demo4/use_foo"
+                },
+                {
+                    "label": "image_viewer",
+                    "value": "${workspaceFolder}/build/image_viewer/image_viewer"
+                },
+                {
+                    "label": "testbed",
+                    "value": "${workspaceFolder}/build/testbed"
+                }
+            ],
+            "default": "${workspaceFolder}/build/testbed"
         }
     ]
 }
