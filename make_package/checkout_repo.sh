@@ -86,10 +86,10 @@ checkout_repo() {
     fi
 
     # 检查是否需要更新
-    if ! should_update_repo "$repo_path"; then
-        echo "✅ Repository $repo_name ready (cached)."
-        return 0
-    fi
+    # if ! should_update_repo "$repo_path"; then
+    #     echo "✅ Repository $repo_name ready (cached)."
+    #     return 0
+    # fi
 
     # Remote management
     local current_origin
