@@ -12,6 +12,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Correctly print UTF-8 characters in MSVC output console
 if(MSVC)
   add_compile_options("/source-charset:utf-8")
+  set(ZZPKG_PLATFORM "vs2022")
 endif()
 
 include(cmake/igl_copy_dll.cmake)
