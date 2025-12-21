@@ -40,3 +40,6 @@ cmake "${CMAKE_GENERATOR_OPTIONS[@]}" "${CMAKE_OPTIONS[@]}" \
       -DCMAKE_INSTALL_PREFIX="$install_dir" \
       -DCMAKE_BUILD_TYPE=Release \
       -S "$source_dir" -B "$build_dir" -Wno-deprecated
+
+cmake --build "$build_dir" --config Release
+cmake --build "$build_dir" --target install --config Release
