@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/utils/logger.hpp>
 #include <stdlib.h>
+#include "debug_helper.h"
 
 const std::string get_zzpkg_root()
 {
@@ -53,7 +54,7 @@ int main()
             break;
         }
 
-        cv::imshow("Video", frame);
+        cv::imshow("Video", frame); // breakpoint here
         if (cv::waitKey(30) >= 0)
             break;
         printf("wait\n");
