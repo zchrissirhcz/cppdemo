@@ -10,7 +10,7 @@ source ../checkout_repo.sh
 work_dir=$(pwd)
 tag="4.12.0"
 version="$tag"
-pkg_name="opencv"
+pkg_name="OpenCV"
 source_dir="$work_dir/opencv"
 
 if [[ -z "$SKIP_CLONE" ]]; then
