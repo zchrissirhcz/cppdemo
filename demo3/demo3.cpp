@@ -27,6 +27,8 @@ int main()
     // Silence OpenCV internal logger
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
 
+    std::cout << cv::getBuildInformation() << std::endl; // Add this line
+
     const std::string ZZPKG_ROOT = get_zzpkg_root();
     printf("ZZPKG_ROOT: %s\n", ZZPKG_ROOT.c_str());
     const std::string video_path = ZZPKG_ROOT + "/opencv-src/4.12.0/samples/cpp/tutorial_code/calib3d/real_time_pose_estimation/Data/box.mp4";
@@ -54,6 +56,7 @@ int main()
         cv::imshow("Video", frame);
         if (cv::waitKey(30) >= 0)
             break;
+        printf("wait\n");
     }
 
     cv::destroyAllWindows();

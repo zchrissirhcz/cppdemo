@@ -30,14 +30,20 @@
         },
         {
             "name": "cpptools-lldb",
-            "type": "cppdbg",
-            "MIMode": "lldb",
+            //"type": "cppdbg",
+            "type": "lldb",
+            //"MIMode": "lldb",
             "program": "${input:programPath}",
             "request": "launch",
             "args": [],
-            "stopAtEntry": false,
+            "stopOnEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": []
+            "env": {},
+            "initCommands": [
+                //"command script import ${env:HOME}/.lldb/debugview.py"
+                "command script import ${workspaceFolder}/image_viewer/debugview.py"
+                //"command script import /home/zz/work/cppdemo/image_viewer/debugview.py"
+            ]
         },
         {
             "name": "codelldb-gdb",
@@ -85,6 +91,7 @@
                     "description": "Load debugview command",
                     //"text": "source ~/.gdb/debugview.py",
                     "text": "source ${workspaceFolder}/image_viewer/gdb/debugview.py",
+                    //"text": "source $HOME/work/cppdemo/image_viewer/gdb/debugview.py",
                     "ignoreFailures": false
                 }
             ]
