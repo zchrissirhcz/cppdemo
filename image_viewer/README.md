@@ -16,6 +16,11 @@ Edit launch.json to load debugview.py:
             ]
 ```
 
+For GDB:
+```
+echo "source ~/.gdb/debugview.py" >> ~/.gdbinit
+```
+
 ## Usage
 
 step1:

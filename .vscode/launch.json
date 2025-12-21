@@ -61,7 +61,32 @@
             "env": {},
             "initCommands": [
                 //"command script import ${env:HOME}/.lldb/debugview.py"
-                "command script import ${workspaceFolder}/image_viewer/debugview.py"
+                "command script import ${workspaceFolder}/image_viewer/lldb/debugview.py"
+            ]
+        },
+        {
+            "name": "Debug demo3 (GDB)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/demo3/demo3",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Load debugview command",
+                    //"text": "source ~/.gdb/debugview.py",
+                    "text": "source ${workspaceFolder}/image_viewer/gdb/debugview.py",
+                    "ignoreFailures": false
+                }
             ]
         }
     ],
