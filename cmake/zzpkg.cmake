@@ -77,78 +77,90 @@ macro(zzpkg_find PACKAGE_NAME_AND_VERSION)
   )
 
   # Default path construction
-  set(package_root "${ZZPKG_ROOT}/${PACKAGE_NAME}/${PACKAGE_VERSION}/${ZZPKG_PLATFORM}-${ZZPKG_ARCH}")
-
-  if((ZZPKG_PLATFORM STREQUAL "android") AND ARG_ANDROID)
-    set(package_root "${ARG_ANDROID}")
-  elseif((ZZPKG_PLATFORM STREQUAL "windows") AND ARG_WINDOWS)
-    set(package_root "${ARG_WINDOWS}")
-  elseif((ZZPKG_PLATFORM STREQUAL "mac") AND ARG_MAC)
-    set(package_root "${ARG_MAC}")
-  elseif((ZZPKG_PLATFORM STREQUAL "linux") AND ARG_LINUX)
-    set(package_root "${ARG_LINUX}")
-  elseif(ARG_DEFAULT)
-    set(package_root "${ARG_DEFAULT}")
-  endif()
-
-  if(NOT package_root)
-    message(FATAL_ERROR "No ${PACKAGE_NAME_AND_VERSION} path provided for current platform")
-  endif()
-
-  message(STATUS "Searching ${PACKAGE_NAME_AND_VERSION} on ${ZZPKG_PLATFORM}")
-  message(STATUS "Root directory: ${package_root}")
-
-  # 常见的 CMake config 文件位置
-  set(candidate_subdirs
-    ""
-    lib/cmake/${PACKAGE_NAME}
-    lib/cmake
-    share/cmake/${PACKAGE_NAME}
-    share/${PACKAGE_NAME}
-    cmake/lib
-    x64/vc18/lib
-    x64/vc17/lib
-    x64/vc16/lib
-    x64/vc15/lib
-    lib
-    sdk/native/jni
-    sdk/native/jni/abi-${ANDROID_ABI}
-    cmake/abi-${ANDROID_ABI}
-    cmake
-  )
-
-  # 尝试查找 Config 文件
-  set(config_found FALSE)
-  foreach(subdir ${candidate_subdirs})
-    set(config_path "${package_root}/${subdir}")
-    set(config_files
-      "${config_path}/${PACKAGE_NAME}Config.cmake"
-      "${config_path}/${PACKAGE_NAME}-config.cmake"
+  # try 1: if exists `inc` directory under ZZPKG_ROOT/PACKAGE_NAME/PACKAGE_VERSION, treat it as header-only library
+  set(PACKAGE_PLATFORM_INDEPENDENT_ROOT "${ZZPKG_ROOT}/${PACKAGE_NAME}/${PACKAGE_VERSION}")
+  set(PACKAGE_PLATFORM_DEPENDENT_ROOT "${ZZPKG_ROOT}/${PACKAGE_NAME}/${PACKAGE_VERSION}/${ZZPKG_PLATFORM}-${ZZPKG_ARCH}")
+  if(EXISTS "${PACKAGE_PLATFORM_INDEPENDENT_ROOT}/inc")
+    set(PACKAGE_ROOT "${PACKAGE_PLATFORM_INDEPENDENT_ROOT}")
+    add_library(${PACKAGE_NAME} INTERFACE)
+    target_include_directories(${PACKAGE_NAME} INTERFACE "${PACKAGE_PLATFORM_INDEPENDENT_ROOT}/inc")
+    set_target_properties(${PACKAGE_NAME} PROPERTIES
+      VERSION ${PACKAGE_VERSION}
     )
-    foreach(config_file ${config_files})
-      if(EXISTS "${config_file}")
-        set(${PACKAGE_NAME}_DIR "${config_path}")
-        message(STATUS "Found ${PACKAGE_NAME} config in: ${config_path}")
-        set(config_found TRUE)
+    add_library(zzpkg::${PACKAGE_NAME} ALIAS ${PACKAGE_NAME})
+  elseif(EXISTS ${PACKAGE_PLATFORM_DEPENDENT_ROOT})
+    set(PACKAGE_ROOT "${PACKAGE_PLATFORM_DEPENDENT_ROOT}")
+    if((ZZPKG_PLATFORM STREQUAL "android") AND ARG_ANDROID)
+      set(package_root "${ARG_ANDROID}")
+    elseif((ZZPKG_PLATFORM STREQUAL "windows") AND ARG_WINDOWS)
+      set(package_root "${ARG_WINDOWS}")
+    elseif((ZZPKG_PLATFORM STREQUAL "mac") AND ARG_MAC)
+      set(package_root "${ARG_MAC}")
+    elseif((ZZPKG_PLATFORM STREQUAL "linux") AND ARG_LINUX)
+      set(package_root "${ARG_LINUX}")
+    elseif(ARG_DEFAULT)
+      set(package_root "${ARG_DEFAULT}")
+    endif()
+
+    if(NOT package_root)
+      message(FATAL_ERROR "No ${PACKAGE_NAME_AND_VERSION} path provided for current platform")
+    endif()
+
+    message(STATUS "Searching ${PACKAGE_NAME_AND_VERSION} on ${ZZPKG_PLATFORM}")
+    message(STATUS "Root directory: ${package_root}")
+
+    # 常见的 CMake config 文件位置
+    set(candidate_subdirs
+      ""
+      lib/cmake/${PACKAGE_NAME}
+      lib/cmake
+      share/cmake/${PACKAGE_NAME}
+      share/${PACKAGE_NAME}
+      cmake/lib
+      x64/vc18/lib
+      x64/vc17/lib
+      x64/vc16/lib
+      x64/vc15/lib
+      lib
+      sdk/native/jni
+      sdk/native/jni/abi-${ANDROID_ABI}
+      cmake/abi-${ANDROID_ABI}
+      cmake
+    )
+
+    # 尝试查找 Config 文件
+    set(config_found FALSE)
+    foreach(subdir ${candidate_subdirs})
+      set(config_path "${package_root}/${subdir}")
+      set(config_files
+        "${config_path}/${PACKAGE_NAME}Config.cmake"
+        "${config_path}/${PACKAGE_NAME}-config.cmake"
+      )
+      foreach(config_file ${config_files})
+        if(EXISTS "${config_file}")
+          set(${PACKAGE_NAME}_DIR "${config_path}")
+          message(STATUS "Found ${PACKAGE_NAME} config in: ${config_path}")
+          set(config_found TRUE)
+          break()
+        endif()
+      endforeach()
+      if(config_found)
         break()
       endif()
     endforeach()
-    if(config_found)
-      break()
+
+    if(NOT config_found)
+      message(FATAL_ERROR "Could not find ${PACKAGE_NAME}Config.cmake in subdirs of: ${package_root}")
     endif()
-  endforeach()
 
-  if(NOT config_found)
-    message(FATAL_ERROR "Could not find ${PACKAGE_NAME}Config.cmake in subdirs of: ${package_root}")
-  endif()
-
-  # 调用 find_package
-  if(ARG_COMPONENTS)
-    find_package(${PACKAGE_NAME} REQUIRED COMPONENTS ${ARG_COMPONENTS})
-  elseif(ARG_OPTIONAL_COMPONENTS)
-    find_package(${PACKAGE_NAME} REQUIRED OPTIONAL_COMPONENTS ${ARG_OPTIONAL_COMPONENTS})
-  else()
-    find_package(${PACKAGE_NAME} REQUIRED)
+    # 调用 find_package
+    if(ARG_COMPONENTS)
+      find_package(${PACKAGE_NAME} REQUIRED COMPONENTS ${ARG_COMPONENTS})
+    elseif(ARG_OPTIONAL_COMPONENTS)
+      find_package(${PACKAGE_NAME} REQUIRED OPTIONAL_COMPONENTS ${ARG_OPTIONAL_COMPONENTS})
+    else()
+      find_package(${PACKAGE_NAME} REQUIRED)
+    endif()
   endif()
 
   message(STATUS "${PACKAGE_NAME}_FOUND: ${${PACKAGE_NAME}_FOUND}")
