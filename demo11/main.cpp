@@ -47,10 +47,44 @@ void filesystem_demo()
     std::cout << (exists ? "找到" : "未找到") << " readme.md" << std::endl;
 }
 
-int main()
+#include <CLI/CLI11.hpp>
+#include <iostream>
+#include <string>
+
+int cli11_demo(int argc, const char* argv[])
+{
+    CLI::App app("K3Pi goofit fitter");
+    // add version output
+    app.set_version_flag("--version", std::string(CLI11_VERSION));
+    std::string file;
+    CLI::Option *opt = app.add_option("-f,--file,file", file, "File name");
+
+    int count{0};
+    CLI::Option *copt = app.add_option("-c,--count", count, "Counter");
+
+    int v{0};
+    CLI::Option *flag = app.add_flag("--flag", v, "Some flag that can be passed multiple times");
+
+    double value{0.0};  // = 3.14;
+    app.add_option("-d,--double", value, "Some Value");
+
+    CLI11_PARSE(app, argc, argv);
+
+    std::cout << "Working on file: " << file << ", direct count: " << app.count("--file")
+              << ", opt count: " << opt->count() << '\n';
+    std::cout << "Working on count: " << count << ", direct count: " << app.count("--count")
+              << ", opt count: " << copt->count() << '\n';
+    std::cout << "Received flag: " << v << " (" << flag->count() << ") times\n";
+    std::cout << "Some value: " << value << '\n';
+
+    return 0;
+}
+
+int main(int argc, const char* argv[])
 {
     spdlog_demo();
     fmt_demo();
     filesystem_demo();
+    cli11_demo(argc, argv);
     return 0;
 }
