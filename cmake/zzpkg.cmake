@@ -100,6 +100,8 @@ macro(zzpkg_find PACKAGE_NAME_AND_VERSION)
       set(package_root "${ARG_LINUX}")
     elseif(ARG_DEFAULT)
       set(package_root "${ARG_DEFAULT}")
+    else()
+      set(package_root "${PACKAGE_ROOT}")
     endif()
 
     if(NOT package_root)
