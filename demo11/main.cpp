@@ -1,6 +1,15 @@
 #include "spdlog/spdlog.h"
 
-int main() 
+#include <fmt/chrono.h>
+
+void fmt_demo()
+{
+    auto now = std::chrono::system_clock::now();
+    fmt::print("Date and time: {}\n", now);
+    fmt::print("Time: {:%H:%M}\n", now);
+}
+
+void spdlog_demo() 
 {
     spdlog::info("Welcome to spdlog!");
     spdlog::error("Some error message with arg: {}", 1);
@@ -22,4 +31,11 @@ int main()
     // remove (depending on SPDLOG_ACTIVE_LEVEL) the call on the release code.
     SPDLOG_TRACE("Some trace message with param {}", 42);
     SPDLOG_DEBUG("Some debug message");
+}
+
+int main()
+{
+    spdlog_demo();
+    fmt_demo();
+    return 0;
 }
