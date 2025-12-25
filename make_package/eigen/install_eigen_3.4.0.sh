@@ -16,7 +16,7 @@ source_dir="$work_dir/eigen"
 if [[ -z "$SKIP_CLONE" ]]; then
     checkout_repo "eigen" \
             "https://gitlab.com/libeigen/eigen.git" \
-            "https://gitee.com/logeexpluoqi/eigen.git" \
+            "https://gitee.com/libeigen/eigen.git" \
             "$source_dir" \
             "$tag"
 fi
