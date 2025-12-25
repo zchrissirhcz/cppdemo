@@ -33,9 +33,24 @@ void spdlog_demo()
     SPDLOG_DEBUG("Some debug message");
 }
 
+#include <iostream>
+//#include <filesystem>
+//namespace fs = std::filesystem;
+
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
+
+void filesystem_demo()
+{
+    std::string path = ".";  // 要检查的目录路径
+    bool exists = fs::exists(fs::path(path) / "readme.md");
+    std::cout << (exists ? "找到" : "未找到") << " readme.md" << std::endl;
+}
+
 int main()
 {
     spdlog_demo();
     fmt_demo();
+    filesystem_demo();
     return 0;
 }
