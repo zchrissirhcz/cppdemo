@@ -163,7 +163,7 @@ macro(zzpkg_find PACKAGE_RECIPE)
         "${config_path}/${PACKAGE_NAME}-config.cmake"
       )
       foreach(config_file ${config_files})
-        message(STATUS "[debug] config_file: ${config_file}")
+        # message(STATUS "[debug] config_file: ${config_file}")
         if(EXISTS "${config_file}")
           set(${PACKAGE_NAME}_DIR "${config_path}")
           message(STATUS "  Found ${PACKAGE_NAME} config file in: ${config_path}")
