@@ -117,6 +117,7 @@ macro(zzpkg_find PACKAGE_RECIPE)
   if(PACKAGE_HINT)
     list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT})
   endif()
+  list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_DEPENDENT_ROOT})
   list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_INDEPENDENT_ROOT})
 
   foreach(PACKAGE_ROOT ${CANDIDATE_PACKAGE_ROOT_LIST})
@@ -131,7 +132,7 @@ macro(zzpkg_find PACKAGE_RECIPE)
       message(STATUS "  Created INTERFACE target: zzpkg::${PACKAGE_NAME}")
       break()
     endif()
-    message(STATUS "[debug] not a interface library")
+    # message(STATUS "[debug] not a interface library")
       
     # 常见的 CMake config 文件位置
     set(candidate_subdirs
