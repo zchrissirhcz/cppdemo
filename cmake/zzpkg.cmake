@@ -56,158 +56,183 @@ zzpkg_detect_arch()
 #   MACOS    "path/to/macos/package"      # Package install path on macOS, optional
 # )
 macro(zzpkg_find PACKAGE_RECIPE)
-  message(STATUS "Searching recipe ${PACKAGE_RECIPE} on platform ${ZZPKG_PLATFORM}")
-  # 解析 PACKAGE_RECIPE 为 pkg_name、pkg_version 和 pkg_hint (可选)
+  # 立即解析包名
   string(REPLACE "/" ";" _recipe_parts "${PACKAGE_RECIPE}")
   string(REPLACE ":" ";" _recipe_parts "${_recipe_parts}")
-  list(LENGTH _recipe_parts _recipe_parts_len)  
+  list(LENGTH _recipe_parts _recipe_parts_len)
   if(_recipe_parts_len LESS 2)
-    message(FATAL_ERROR "PACKAGE_RECIPE must be in the format 'PackageName/Version[:hint]'")
+    message(FATAL_ERROR "PACKAGE_RECIPE must be in format 'PackageName/Version[:hint]'")
   endif()
+  
   list(GET _recipe_parts 0 PACKAGE_NAME)
   list(GET _recipe_parts 1 PACKAGE_VERSION)
   set(PACKAGE_HINT)
   if(_recipe_parts_len EQUAL 3)
     list(GET _recipe_parts 2 PACKAGE_HINT)
   endif()
-
+  
+  message(STATUS "Searching package with recipe: ${PACKAGE_RECIPE} on platform ${ZZPKG_PLATFORM}")
   message(STATUS "  PACKAGE_NAME: ${PACKAGE_NAME}")
   message(STATUS "  PACKAGE_VERSION: ${PACKAGE_VERSION}")
   message(STATUS "  PACKAGE_HINT: ${PACKAGE_HINT}")
 
-  cmake_parse_arguments(
-    ARG
-    ""
-    "WINDOWS;LINUX;ANDROID;MAC;DEFAULT"
-    ""
-    ${ARGN}
-  )
-
-  if((ZZPKG_PLATFORM STREQUAL "android") AND ARG_ANDROID)
-    set(CUSTOM_PACKAGE_ROOT "${ARG_ANDROID}")
-  elseif((ZZPKG_PLATFORM STREQUAL "windows") AND ARG_WINDOWS)
-    set(CUSTOM_PACKAGE_ROOT "${ARG_WINDOWS}")
-  elseif((ZZPKG_PLATFORM STREQUAL "mac") AND ARG_MAC)
-    set(CUSTOM_PACKAGE_ROOT "${ARG_MAC}")
-  elseif((ZZPKG_PLATFORM STREQUAL "linux") AND ARG_LINUX)
-    set(CUSTOM_PACKAGE_ROOT "${ARG_LINUX}")
-  elseif(ARG_DEFAULT)
-    set(CUSTOM_PACKAGE_ROOT "${ARG_DEFAULT}")
+  # ✅ 使用全局属性检查是否已导入
+  get_property(_pkg_imported GLOBAL PROPERTY ${PACKAGE_NAME}_IMPORTED)
+  
+  if(_pkg_imported)
+    # 获取已导入的 recipe
+    get_property(_pkg_recipe GLOBAL PROPERTY ${PACKAGE_NAME}_RECIPE)
+    get_property(_pkg_version GLOBAL PROPERTY ${PACKAGE_NAME}_VERSION)
+    if(${_pkg_version} STREQUAL ${PACKAGE_VERSION})
+      message(STATUS "  Reusing imported package from recipe: ${_pkg_recipe}")
+    else()
+      message(FATAL_ERROR "conflict version: imported(${_pkg_version}) vs to-be-imported(${PACKAGE_VERSION})")
+    endif()
   else()
-    set(CUSTOM_PACKAGE_ROOT)
-  endif()
-
-  # Default path construction
-  # try 1: if exists `inc` directory under ZZPKG_ROOT/PACKAGE_NAME/PACKAGE_VERSION, treat it as header-only library
-  set(PACKAGE_PLATFORM_INDEPENDENT_ROOT "${ZZPKG_ROOT}/${PACKAGE_NAME}/${PACKAGE_VERSION}")
-  set(PACKAGE_PLATFORM_DEPENDENT_ROOT "${ZZPKG_ROOT}/${PACKAGE_NAME}/${PACKAGE_VERSION}/${ZZPKG_PLATFORM}-${ZZPKG_ARCH}")
-  set(PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT "${PACKAGE_PLATFORM_DEPENDENT_ROOT}")
-  if(PACKAGE_HINT)
-    STRING(APPEND PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT "-${PACKAGE_HINT}")
-  endif()
-
-  message(STATUS "  PACKAGE_PLATFORM_INDEPENDENT_ROOT: ${PACKAGE_PLATFORM_INDEPENDENT_ROOT}")
-  message(STATUS "  PACKAGE_PLATFORM_DEPENDENT_ROOT: ${PACKAGE_PLATFORM_DEPENDENT_ROOT}")
-  message(STATUS "  PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT: ${PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT}")
-
-  set(CANDIDATE_PACKAGE_ROOT_LIST)
-  if(CUSTOM_PACKAGE_ROOT)
-    list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${CUSTOM_PACKAGE_ROOT})
-  endif()
-  if(PACKAGE_HINT)
-    list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT})
-  endif()
-  list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_DEPENDENT_ROOT})
-  list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_INDEPENDENT_ROOT})
-
-  set(PACKAGE_FOUND FALSE)
-  foreach(PACKAGE_ROOT ${CANDIDATE_PACKAGE_ROOT_LIST})
-    if(PACKAGE_FOUND)
-      break()
-    endif()
-
-    message(STATUS "  Try find package with PACKAGE_ROOT: ${PACKAGE_ROOT}")
-    if(EXISTS "${PACKAGE_ROOT}/inc")
-      add_library(${PACKAGE_NAME} INTERFACE)
-      target_include_directories(${PACKAGE_NAME} INTERFACE "${PACKAGE_PLATFORM_INDEPENDENT_ROOT}/inc")
-      set_target_properties(${PACKAGE_NAME} PROPERTIES
-        VERSION ${PACKAGE_VERSION}
-      )
-      add_library(zzpkg::${PACKAGE_NAME} ALIAS ${PACKAGE_NAME})
-      message(STATUS "  Created INTERFACE target: zzpkg::${PACKAGE_NAME}")
-      set(PACKAGE_FOUND TRUE)
-      break()
-    endif()
-    # message(STATUS "[debug] not a interface library")
-      
-    # 常见的 CMake config 文件位置
-    set(candidate_subdirs
+    # ✅ 未导入，执行查找逻辑
+    cmake_parse_arguments(
+      ARG
       ""
-      lib/cmake/${PACKAGE_NAME}
-      lib/cmake
-      share/cmake/${PACKAGE_NAME}
-      share/${PACKAGE_NAME}
-      cmake/lib
-      x64/vc18/lib
-      x64/vc17/lib
-      x64/vc16/lib
-      x64/vc15/lib
-      lib
-      sdk/native/jni
-      sdk/native/jni/abi-${ANDROID_ABI}
-      cmake/abi-${ANDROID_ABI}
-      cmake/staticlib
-      cmake
+      "WINDOWS;LINUX;ANDROID;MAC;DEFAULT"
+      ""
+      ${ARGN}
     )
 
-    # 尝试查找 Config 文件
-    set(config_found FALSE)
-    foreach(subdir ${candidate_subdirs})
-      set(config_path "${PACKAGE_ROOT}/${subdir}")
-      set(config_files
-        "${config_path}/${PACKAGE_NAME}Config.cmake"
-        "${config_path}/${PACKAGE_NAME}-config.cmake"
-      )
-      foreach(config_file ${config_files})
-        # message(STATUS "[debug] config_file: ${config_file}")
-        if(EXISTS "${config_file}")
-          set(${PACKAGE_NAME}_DIR "${config_path}")
-          message(STATUS "  Found ${PACKAGE_NAME} config file in: ${config_path}")
-          set(config_found TRUE)
-          break()
-        endif()
-      endforeach()
-      if(config_found)
-        find_package(${PACKAGE_NAME} REQUIRED)
-        message(STATUS "  Found package by using find_package()")
+    if((ZZPKG_PLATFORM STREQUAL "android") AND ARG_ANDROID)
+      set(CUSTOM_PACKAGE_ROOT "${ARG_ANDROID}")
+    elseif((ZZPKG_PLATFORM STREQUAL "windows") AND ARG_WINDOWS)
+      set(CUSTOM_PACKAGE_ROOT "${ARG_WINDOWS}")
+    elseif((ZZPKG_PLATFORM STREQUAL "mac") AND ARG_MAC)
+      set(CUSTOM_PACKAGE_ROOT "${ARG_MAC}")
+    elseif((ZZPKG_PLATFORM STREQUAL "linux") AND ARG_LINUX)
+      set(CUSTOM_PACKAGE_ROOT "${ARG_LINUX}")
+    elseif(ARG_DEFAULT)
+      set(CUSTOM_PACKAGE_ROOT "${ARG_DEFAULT}")
+    else()
+      set(CUSTOM_PACKAGE_ROOT)
+    endif()
+
+    # Default path construction
+    set(PACKAGE_PLATFORM_INDEPENDENT_ROOT "${ZZPKG_ROOT}/${PACKAGE_NAME}/${PACKAGE_VERSION}")
+    set(PACKAGE_PLATFORM_DEPENDENT_ROOT "${ZZPKG_ROOT}/${PACKAGE_NAME}/${PACKAGE_VERSION}/${ZZPKG_PLATFORM}-${ZZPKG_ARCH}")
+    set(PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT "${PACKAGE_PLATFORM_DEPENDENT_ROOT}")
+    if(PACKAGE_HINT)
+      STRING(APPEND PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT "-${PACKAGE_HINT}")
+    endif()
+
+    message(STATUS "  PACKAGE_PLATFORM_INDEPENDENT_ROOT: ${PACKAGE_PLATFORM_INDEPENDENT_ROOT}")
+    message(STATUS "  PACKAGE_PLATFORM_DEPENDENT_ROOT: ${PACKAGE_PLATFORM_DEPENDENT_ROOT}")
+    message(STATUS "  PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT: ${PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT}")
+
+    set(CANDIDATE_PACKAGE_ROOT_LIST)
+    if(CUSTOM_PACKAGE_ROOT)
+      list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${CUSTOM_PACKAGE_ROOT})
+    endif()
+    if(PACKAGE_HINT)
+      list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT})
+    endif()
+    list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_DEPENDENT_ROOT})
+    list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_INDEPENDENT_ROOT})
+
+    set(PACKAGE_FOUND FALSE)
+    foreach(PACKAGE_ROOT ${CANDIDATE_PACKAGE_ROOT_LIST})
+      if(PACKAGE_FOUND)
+        break()
+      endif()
+
+      message(STATUS "  Try find package with PACKAGE_ROOT: ${PACKAGE_ROOT}")
+      if(EXISTS "${PACKAGE_ROOT}/inc")
+        add_library(${PACKAGE_NAME} INTERFACE)
+        target_include_directories(${PACKAGE_NAME} INTERFACE "${PACKAGE_PLATFORM_INDEPENDENT_ROOT}/inc")
+        set_target_properties(${PACKAGE_NAME} PROPERTIES
+          VERSION ${PACKAGE_VERSION}
+        )
+        add_library(zzpkg::${PACKAGE_NAME} ALIAS ${PACKAGE_NAME})
+        message(STATUS "  Created INTERFACE target: zzpkg::${PACKAGE_NAME}")
         set(PACKAGE_FOUND TRUE)
         break()
       endif()
+        
+      # 常见的 CMake config 文件位置
+      set(candidate_subdirs
+        ""
+        lib/cmake/${PACKAGE_NAME}
+        lib/cmake
+        share/cmake/${PACKAGE_NAME}
+        share/${PACKAGE_NAME}
+        cmake/lib
+        x64/vc18/lib
+        x64/vc17/lib
+        x64/vc16/lib
+        x64/vc15/lib
+        lib
+        sdk/native/jni
+        sdk/native/jni/abi-${ANDROID_ABI}
+        cmake/abi-${ANDROID_ABI}
+        cmake/staticlib
+        cmake
+      )
+
+      # 尝试查找 Config 文件
+      foreach(subdir ${candidate_subdirs})
+        if(PACKAGE_FOUND)
+          break()
+        endif()
+        set(config_path "${PACKAGE_ROOT}/${subdir}")
+        set(config_files
+          "${config_path}/${PACKAGE_NAME}Config.cmake"
+          "${config_path}/${PACKAGE_NAME}-config.cmake"
+        )
+        foreach(config_file ${config_files})
+          if(EXISTS "${config_file}")
+            set(${PACKAGE_NAME}_DIR "${config_path}")
+            message(STATUS "  find_package(${PACKAGE_NAME}) with config file ${config_file}")
+            find_package(${PACKAGE_NAME} REQUIRED)
+            set(PACKAGE_FOUND TRUE)
+            break()
+          endif()
+        endforeach()
+      endforeach()
     endforeach()
-  endforeach()
 
-  # if(NOT config_found)
-  #   message(FATAL_ERROR "Could not find ${PACKAGE_NAME}Config.cmake in subdirs of: ${package_root}")
-  # endif()
-
-  # 清理临时变量
-  unset(ARG_WINDOWS)
-  unset(ARG_LINUX)
-  unset(ARG_ANDROID)
-  unset(ARG_MACOS)
-  unset(ARG_COMPONENTS)
-  unset(ARG_OPTIONAL_COMPONENTS)
-  unset(package_root)
-  unset(platform_name)
-  unset(candidate_subdirs)
-  unset(config_found)
-  unset(subdir)
-  unset(config_path)
-  unset(config_files)
-  unset(config_file)
+    if(NOT PACKAGE_FOUND)
+      message(FATAL_ERROR "Could not find package with recipe: ${PACKAGE_RECIPE}")
+    endif()
+    
+    # ✅ 使用全局属性设置导入标记
+    set_property(GLOBAL PROPERTY ${PACKAGE_NAME}_IMPORTED TRUE)
+    set_property(GLOBAL PROPERTY ${PACKAGE_NAME}_VERSION "${PACKAGE_VERSION}")
+    set_property(GLOBAL PROPERTY ${PACKAGE_NAME}_RECIPE "${PACKAGE_RECIPE}")
+    
+    message(STATUS "Successfully imported ${PACKAGE_NAME} (${PACKAGE_RECIPE})")
+    
+    # 清理临时变量
+    unset(ARG_WINDOWS)
+    unset(ARG_LINUX)
+    unset(ARG_ANDROID)
+    unset(ARG_MAC)
+    unset(CUSTOM_PACKAGE_ROOT)
+    unset(package_root)
+    unset(platform_name)
+    unset(candidate_subdirs)
+    unset(subdir)
+    unset(config_path)
+    unset(config_files)
+    unset(config_file)
+    unset(PACKAGE_PLATFORM_INDEPENDENT_ROOT)
+    unset(PACKAGE_PLATFORM_DEPENDENT_ROOT)
+    unset(PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT)
+    unset(CANDIDATE_PACKAGE_ROOT_LIST)
+    unset(PACKAGE_FOUND)
+    unset(PACKAGE_ROOT)
+  endif()
+  
+  # 清理解析变量和检查变量
   unset(_recipe_parts)
+  unset(_recipe_parts_len)
+  unset(_pkg_imported)
+  unset(_pkg_recipe)
   unset(PACKAGE_NAME)
   unset(PACKAGE_VERSION)
   unset(PACKAGE_HINT)
-  unset(PACKAGE_ROOT)
 endmacro()
