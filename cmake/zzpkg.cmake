@@ -54,8 +54,6 @@ zzpkg_detect_arch()
 #   LINUX    "path/to/linux/package"      # Package install path on Linux, optional
 #   ANDROID  "path/to/android/package"    # Package install path on Android, optional
 #   MACOS    "path/to/macos/package"      # Package install path on macOS, optional
-#   COMPONENTS comp1 comp2 ...            # Required components, optional
-#   OPTIONAL_COMPONENTS optcomp1 optcomp2 ... # Optional components, optional
 # )
 macro(zzpkg_find PACKAGE_NAME_AND_VERSION)
   # 解析 PACKAGE_NAME_AND_VERSION 为 pkg_name 和 pkg_version
@@ -72,7 +70,7 @@ macro(zzpkg_find PACKAGE_NAME_AND_VERSION)
     ARG
     ""
     "WINDOWS;LINUX;ANDROID;MAC;DEFAULT"
-    "COMPONENTS;OPTIONAL_COMPONENTS"
+    ""
     ${ARGN}
   )
 
@@ -155,14 +153,7 @@ macro(zzpkg_find PACKAGE_NAME_AND_VERSION)
       message(FATAL_ERROR "Could not find ${PACKAGE_NAME}Config.cmake in subdirs of: ${package_root}")
     endif()
 
-    # 调用 find_package
-    if(ARG_COMPONENTS)
-      find_package(${PACKAGE_NAME} REQUIRED COMPONENTS ${ARG_COMPONENTS})
-    elseif(ARG_OPTIONAL_COMPONENTS)
-      find_package(${PACKAGE_NAME} REQUIRED OPTIONAL_COMPONENTS ${ARG_OPTIONAL_COMPONENTS})
-    else()
-      find_package(${PACKAGE_NAME} REQUIRED)
-    endif()
+    find_package(${PACKAGE_NAME} REQUIRED)
   endif()
 
   message(STATUS "${PACKAGE_NAME}_FOUND: ${${PACKAGE_NAME}_FOUND}")
