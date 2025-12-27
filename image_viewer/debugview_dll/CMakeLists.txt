@@ -4,7 +4,7 @@ project(debugview_dll)
 set(CMAKE_CXX_STANDARD 11)
 
 # 查找 OpenCV
-find_package(OpenCV REQUIRED)
+zzpkg_find(OpenCV/4.12.0)
 
 # 创建 DLL
 add_library(debugview_dll SHARED debugview_dll.cpp)
