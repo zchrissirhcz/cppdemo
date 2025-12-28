@@ -7,7 +7,7 @@ set -x
 
 sudo apt install -y libgtk2.0-dev
 
-build_dir="$work_dir/build-linux-x64"
+build_dir="$work_dir/build-linux-x64-static"
 
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"
 
@@ -21,6 +21,10 @@ export PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}${PKG_CONFIG_PATH:+:}$FFMPEG_PREFIX/
 
 CMAKE_OPTIONS+=(
     -G"Ninja"
+    -DBUILD_SHARED_LIBS=OFF
+    -DWITH_PROTOBUF=OFF
+    -DBUILD_PROTOBUF=OFF
+
     -DWITH_FFMPEG=ON
     -DVIDEOIO_ENABLE_PLUGINS=OFF
     
@@ -36,9 +40,9 @@ CMAKE_OPTIONS+=(
     -DFFMPEG_LIBSWRESAMPLE="$FFMPEG_PREFIX/lib/libswresample.a"
 )
 
-install_dir="$ZZPKG_ROOT/$pkg_name/$version/linux-x64"
+install_dir="$ZZPKG_ROOT/$pkg_name/$version/linux-x64-static"
 
-cmake "${CMAKE_GENERATOR_OPTIONS[@]}" "${CMAKE_OPTIONS[@]}" \
+cmake "${CMAKE_OPTIONS[@]}" \
       -DCMAKE_INSTALL_PREFIX="$install_dir" \
       -DCMAKE_BUILD_TYPE=Release \
       -S "$source_dir" -B "$build_dir" -Wno-deprecated
