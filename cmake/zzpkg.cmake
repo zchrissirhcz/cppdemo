@@ -76,6 +76,10 @@ macro(zzpkg_find PACKAGE_RECIPE)
   message(STATUS "  PACKAGE_VERSION: ${PACKAGE_VERSION}")
   message(STATUS "  PACKAGE_HINT: ${PACKAGE_HINT}")
 
+  # parse major version
+  string(REPLACE "." ";" _version_parts "${PACKAGE_VERSION}")
+  list(GET _version_parts 0 PACKAGE_VERSION_MAJOR)
+
   # 检查是否已导入
   get_property(_pkg_imported GLOBAL PROPERTY ${PACKAGE_NAME}_IMPORTED)
   
@@ -157,6 +161,9 @@ macro(zzpkg_find PACKAGE_RECIPE)
       # ncnn, glfw3
       lib/cmake/${PACKAGE_NAME}
 
+      # OpenCV, macOS, Default
+      lib/cmake/${PACKAGE_NAME}${PACKAGE_VERSION_MAJOR}
+
       lib/cmake
       share/cmake/${PACKAGE_NAME}
       share/${PACKAGE_NAME}
@@ -236,10 +243,13 @@ macro(zzpkg_find PACKAGE_RECIPE)
   unset(PACKAGE_ROOT)
   unset(PACKAGE_NAME)
   unset(PACKAGE_VERSION)
+  unset(PACKAGE_VERSION_MAJOR)
   unset(PACKAGE_HINT)
   unset(_recipe_parts)
   unset(_recipe_parts_len)
   unset(_pkg_recipe)
   unset(_pkg_imported)
+  unset(_pkg_version)
+  unset(_version_parts)
   unset(CANDIDATE_PACKAGE_ROOT_LIST)
 endmacro()
