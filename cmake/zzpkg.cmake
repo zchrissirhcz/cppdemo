@@ -154,20 +154,33 @@ macro(zzpkg_find PACKAGE_RECIPE)
     # 常见的 CMake config 文件位置
     set(candidate_subdirs
       ""
+      # ncnn, glfw3
       lib/cmake/${PACKAGE_NAME}
+
       lib/cmake
       share/cmake/${PACKAGE_NAME}
       share/${PACKAGE_NAME}
+
+      # OpenCV Windows, OPENCV_CONFIG_INSTALL_PATH="cmake"
       cmake/lib
+
+      # OpenCV Windows, Default
       x64/vc18/lib
       x64/vc17/lib
       x64/vc16/lib
       x64/vc15/lib
+
       lib
+
+      # OpenCV Android, Default
       sdk/native/jni
       sdk/native/jni/abi-${ANDROID_ABI}
+      # OpenCV Android, OPENCV_CONFIG_INSTALL_PATH="cmake"
       cmake/abi-${ANDROID_ABI}
+
+      # OpenCV Windows, BUILD_SHARED_LIBS=OFF, OPENCV_CONFIG_INSTALL_PATH="cmake"
       cmake/staticlib
+
       cmake
     )
 
