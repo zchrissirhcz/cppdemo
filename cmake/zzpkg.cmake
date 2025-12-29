@@ -79,6 +79,7 @@ macro(zzpkg_find PACKAGE_RECIPE)
   # parse major version
   string(REPLACE "." ";" _version_parts "${PACKAGE_VERSION}")
   list(GET _version_parts 0 PACKAGE_VERSION_MAJOR)
+  message(STATUS "  PACKAGE_VERSION_MAJOR: ${PACKAGE_VERSION_MAJOR}")
 
   # 检查是否已导入
   get_property(_pkg_imported GLOBAL PROPERTY ${PACKAGE_NAME}_IMPORTED)
@@ -161,7 +162,7 @@ macro(zzpkg_find PACKAGE_RECIPE)
       # ncnn, glfw3
       lib/cmake/${PACKAGE_NAME}
 
-      # OpenCV, macOS, Default
+      # OpenCV, macOS, Default; glfw3 macOS, Default
       lib/cmake/${PACKAGE_NAME}${PACKAGE_VERSION_MAJOR}
 
       lib/cmake
@@ -192,23 +193,30 @@ macro(zzpkg_find PACKAGE_RECIPE)
     )
 
     # 尝试查找 Config 文件
-    foreach(subdir ${candidate_subdirs})
-      if(PACKAGE_FOUND)
-        break()
-      endif()
-      set(config_path "${PACKAGE_ROOT}/${subdir}")
-      set(config_files
-        "${config_path}/${PACKAGE_NAME}Config.cmake"
-        "${config_path}/${PACKAGE_NAME}-config.cmake"
-      )
-      foreach(config_file ${config_files})
-        if(EXISTS "${config_file}")
-          set(${PACKAGE_NAME}_DIR "${config_path}")
-          message(STATUS "  find_package(${PACKAGE_NAME}) with config file ${config_file}")
-          find_package(${PACKAGE_NAME} REQUIRED)
-          set(PACKAGE_FOUND TRUE)
+    set(candidate_targets
+      ${PACKAGE_NAME}${PACKAGE_VERSION_MAJOR} # glfw3
+      ${PACKAGE_NAME} # normal
+    )
+    foreach(targetName ${candidate_targets})
+      foreach(subdir ${candidate_subdirs})
+        if(PACKAGE_FOUND)
           break()
         endif()
+        set(config_path "${PACKAGE_ROOT}/${subdir}")
+        set(config_files
+          "${config_path}/${targetName}Config.cmake"
+          "${config_path}/${targetName}-config.cmake"
+        )
+        foreach(config_file ${config_files})
+          message(STATUS "    Try config file: ${config_file}")
+          if(EXISTS "${config_file}")
+            set(${targetName}_DIR "${config_path}")
+            message(STATUS "  find_package(${targetName}) with config file ${config_file}")
+            find_package(${targetName} REQUIRED)
+            set(PACKAGE_FOUND TRUE)
+            break()
+          endif()
+        endforeach()
       endforeach()
     endforeach()
   endforeach()

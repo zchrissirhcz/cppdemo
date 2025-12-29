@@ -10,7 +10,7 @@ source ../checkout_repo.sh
 work_dir=$(pwd)
 tag="3.4"
 version="$tag"
-pkg_name="glfw3"
+pkg_name="glfw"
 source_dir="$work_dir/glfw"
 
 if [[ -z "$SKIP_CLONE" ]]; then

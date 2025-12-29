@@ -5,7 +5,7 @@ project(demo13 VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-zzpkg_find(glfw3/3.4)
+zzpkg_find(glfw/3.4)
 
 # 添加可执行文件
 add_executable(${PROJECT_NAME} 
