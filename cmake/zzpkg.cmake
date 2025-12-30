@@ -162,7 +162,7 @@ macro(zzpkg_find PACKAGE_RECIPE)
       # ncnn, glfw3
       lib/cmake/${PACKAGE_NAME}
 
-      # OpenCV, macOS, Default; glfw3 macOS, Default
+      # OpenCV, macOS/Linux, Default; glfw3 macOS, Default
       lib/cmake/${PACKAGE_NAME}${PACKAGE_VERSION_MAJOR}
 
       lib/cmake
@@ -189,6 +189,7 @@ macro(zzpkg_find PACKAGE_RECIPE)
       # OpenCV Windows, BUILD_SHARED_LIBS=OFF, OPENCV_CONFIG_INSTALL_PATH="cmake"
       cmake/staticlib
 
+      # OpenCV Linux, OPENCV_CONFIG_INSTALL_PATH="cmake"
       cmake
     )
 
