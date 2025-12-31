@@ -44,9 +44,6 @@ macro(zzpkg_detect_arch)
   endif()
 endmacro()
 
-zzpkg_detect_platform()
-zzpkg_detect_arch()
-
 # Macro to find a package given platform-specific root paths
 # Usage:
 # zzpkg_find([PACKAGE_NAME/PACKAGE_VERSION] # Package name and version, required
@@ -266,3 +263,25 @@ macro(zzpkg_find PACKAGE_RECIPE)
   unset(_version_parts)
   unset(CANDIDATE_PACKAGE_ROOT_LIST)
 endmacro()
+
+
+macro(zzpkg_change_output_directories)
+  # 设置所有类型的输出目录
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+  
+  # 针对多配置生成器（VS、Xcode等）
+  foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${CONFIG_TYPE} CONFIG_TYPE_UPPER)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONFIG_TYPE_UPPER} "${CMAKE_BINARY_DIR}")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONFIG_TYPE_UPPER} "${CMAKE_BINARY_DIR}")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIG_TYPE_UPPER} "${CMAKE_BINARY_DIR}")
+  endforeach()
+endmacro()
+
+
+# Global settings
+zzpkg_detect_platform()
+zzpkg_detect_arch()
+zzpkg_change_output_directories()
