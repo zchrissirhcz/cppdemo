@@ -316,8 +316,33 @@ macro(zzpkg_change_output_directories)
 endmacro()
 
 
+macro(zzpkg_setup_for_msvc)
+  if(MSVC)
+    # Correctly print UTF-8 characters in MSVC output console
+    add_compile_options("/source-charset:utf-8")
+
+    # avoid MSVC compile error C2065: 'M_PI': undeclared identifier
+    add_compile_definitions(_USE_MATH_DEFINES)
+    
+    # avoid MSVC compile warning C4996 when warning level /W3 or higher is used
+    # - warning C4996: 'strcpy': This function or variable may be unsafe.
+    # - warning C4996: 'fopen': This function or variable may be unsafe.
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+
+    # avoid introduce macros that conflict with std::min and std::max
+    # - error C2589: '(': illegal token on right side of '::'
+    # - error C2059: syntax error: ')'
+    add_compile_definitions(NOMINMAX)
+    
+    # to speedup the build process by excluding some less used APIs
+    add_compile_definitions(WIN32_LEAN_AND_MEAN)
+  endif()
+endmacro()
+
+
 # Global settings
 zzpkg_detect_os()
 zzpkg_detect_platform()
 zzpkg_detect_arch()
 zzpkg_change_output_directories()
+zzpkg_setup_for_msvc()
