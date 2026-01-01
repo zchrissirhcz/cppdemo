@@ -345,10 +345,16 @@ macro(zzpkg_enable_position_independent_code)
 endmacro()
 
 
+macro(zzpkg_export_compile_commands)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endmacro()
+
+
 # Global settings
 zzpkg_detect_os()
 zzpkg_detect_platform()
 zzpkg_detect_arch()
 zzpkg_enable_position_independent_code()
+zzpkg_export_compile_commands()
 zzpkg_change_output_directories()
 zzpkg_setup_for_msvc()
