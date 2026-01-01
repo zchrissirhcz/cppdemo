@@ -291,12 +291,22 @@ endmacro()
 
 
 macro(zzpkg_change_output_directories)
-  # 设置所有类型的输出目录
+  # Where add_executable() generates executable file
+  # Where add_library(SHARED) generates .dll file on Windows
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/out")
+
+  # Where add_library(SHARED) generates shared library files (.so, .dylib)
+  # Where add_library(MODULE) generates loadable module files (.dll, .so)
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/out")
+  
+  # Where add_library(STATIC) generates static library file
+  # Where add_library(SHARED) generates the import library file (.lib) of the shared library (.dll) if exports at least one symbol
+  # Where add_executable() generates the import library file (.lib) of the executable target if ENABLE_EXPORTS target property is set
+  # Where add_executable() generates the linker import file (.imp on AIX) of the executable target if ENABLE_EXPORTS target property is set
+  # Where add_library(SHARED) generates the linker import file (.tbd) of the shared library target if ENABLE_EXPORTS target property is set
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/out")
   
-  # 针对多配置生成器（VS、Xcode等）
+  # For multi-config generators (MSBuild, XCode), the subdir `Debug`, `Release` is ugly, delete them
   foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES})
     string(TOUPPER ${CONFIG_TYPE} CONFIG_TYPE_UPPER)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONFIG_TYPE_UPPER} "${CMAKE_BINARY_DIR}/out")
