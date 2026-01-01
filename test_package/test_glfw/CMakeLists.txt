@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(demo13 VERSION 1.0.0)
+project(test_glfw VERSION 1.0.0)
 
 # 设置 C++ 标准
 set(CMAKE_CXX_STANDARD 11)

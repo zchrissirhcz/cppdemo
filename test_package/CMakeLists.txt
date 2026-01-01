@@ -1,0 +1,5 @@
+add_subdirectory(test_catch2)
+add_subdirectory(test_cereal)
+add_subdirectory(test_eigen)
+add_subdirectory(test_glfw)
+add_subdirectory(test_many_header_only)
