@@ -305,6 +305,7 @@ macro(zzpkg_change_output_directories)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/out")
   
   # For multi-config generators (e.g. MSBuild, XCode), the subdir `Debug`, `Release` is ugly, delete them
+  get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
   if(GENERATOR_IS_MULTI_CONFIG)
     foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES})
       string(TOUPPER ${CONFIG_TYPE} CONFIG_TYPE_UPPER)
@@ -351,6 +352,7 @@ endmacro()
 
 
 macro(zzpkg_setup_debug_postfix)
+  get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
   if(GENERATOR_IS_MULTI_CONFIG)
     set(CMAKE_DEBUG_POSTFIX "_d")
   endif()
