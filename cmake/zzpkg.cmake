@@ -306,13 +306,15 @@ macro(zzpkg_change_output_directories)
   # Where add_library(SHARED) generates the linker import file (.tbd) of the shared library target if ENABLE_EXPORTS target property is set
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/out")
   
-  # For multi-config generators (MSBuild, XCode), the subdir `Debug`, `Release` is ugly, delete them
-  foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES})
-    string(TOUPPER ${CONFIG_TYPE} CONFIG_TYPE_UPPER)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONFIG_TYPE_UPPER} "${CMAKE_BINARY_DIR}/out")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONFIG_TYPE_UPPER} "${CMAKE_BINARY_DIR}/out")
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIG_TYPE_UPPER} "${CMAKE_BINARY_DIR}/out")
-  endforeach()
+  # For multi-config generators (e.g. MSBuild, XCode), the subdir `Debug`, `Release` is ugly, delete them
+  if(GENERATOR_IS_MULTI_CONFIG)
+    foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES})
+      string(TOUPPER ${CONFIG_TYPE} CONFIG_TYPE_UPPER)
+      set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONFIG_TYPE_UPPER} "${CMAKE_BINARY_DIR}/out")
+      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONFIG_TYPE_UPPER} "${CMAKE_BINARY_DIR}/out")
+      set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIG_TYPE_UPPER} "${CMAKE_BINARY_DIR}/out")
+    endforeach()
+  endif()
 endmacro()
 
 
@@ -350,6 +352,13 @@ macro(zzpkg_export_compile_commands)
 endmacro()
 
 
+macro(zzpkg_setup_debug_postfix)
+  if(GENERATOR_IS_MULTI_CONFIG)
+    set(CMAKE_DEBUG_POSTFIX "_d")
+  endif()
+endmacro()
+
+
 # Global settings
 zzpkg_detect_os()
 zzpkg_detect_platform()
@@ -358,3 +367,4 @@ zzpkg_enable_position_independent_code()
 zzpkg_export_compile_commands()
 zzpkg_change_output_directories()
 zzpkg_setup_for_msvc()
+zzpkg_setup_debug_postfix()
