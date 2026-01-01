@@ -1,20 +1,18 @@
-if(DEFINED ENV{ZZPKG_ROOT})
-  set(ZZPKG_ROOT $ENV{ZZPKG_ROOT})
-else()
-  set(ZZPKG_ROOT "~/.zzpkg")
-endif()
-file(TO_CMAKE_PATH "${ZZPKG_ROOT}" ZZPKG_ROOT)
+# Author: Zhuo Zhang <imzhuo@foxmail.com>
 
+cmake_minimum_required(VERSION 3.15)
+include_guard()
 
-# Set default installation directory
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "" FORCE)
-endif()
+macro(zzpkg_set_root)
+  if(DEFINED ENV{ZZPKG_ROOT})
+    set(ZZPKG_ROOT $ENV{ZZPKG_ROOT})
+  else()
+    set(ZZPKG_ROOT "~/.zzpkg")
+  endif()
+  file(TO_CMAKE_PATH "${ZZPKG_ROOT}" ZZPKG_ROOT)
+  set(ZZPKG_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR} CACHE INTERNAL "")
+endmacro()
 
-# Set default RPATH for installed binaries
-if(NOT CMAKE_INSTALL_RPATH)
-  set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../lib")
-endif()
 
 # determine target os
 macro(zzpkg_detect_os)
@@ -142,7 +140,7 @@ macro(zzpkg_find PACKAGE_RECIPE)
   endif()
 
   message(STATUS "  pkg_platform_independent_root: ${pkg_platform_independent_root}")
-  message(STATUS "  pkg_PLATFORM_DEPENDENT_ROOT: ${pkg_platform_dependent_root}")
+  message(STATUS "  pkg_platform_dependent_root: ${pkg_platform_dependent_root}")
   message(STATUS "  pkg_platform_dependent_root_with_hint: ${pkg_platform_dependent_root_with_hint}")
 
   if(NOT EXISTS ${pkg_platform_independent_root})
@@ -359,7 +357,31 @@ macro(zzpkg_setup_debug_postfix)
 endmacro()
 
 
+function(zzpkg_copy_dll TARGET)
+  include(${ZZPKG_CMAKE_DIR}/igl_copy_dll.cmake)
+  igl_copy_dll(${TARGET})
+endfunction()
+
+# Set default installation directory
+macro(zzpkg_set_default_install_dir)
+  if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "" FORCE)
+  endif()
+endmacro()
+
+
+# Set default RPATH for installed binaries
+macro(zzpkg_set_default_rpath)
+  if(NOT CMAKE_INSTALL_RPATH)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../lib")
+  endif()
+endmacro()
+
+
 # Global settings
+zzpkg_set_root()
+zzpkg_set_default_install_dir()
+zzpkg_set_default_rpath()
 zzpkg_detect_os()
 zzpkg_detect_platform()
 zzpkg_detect_arch()

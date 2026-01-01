@@ -8,4 +8,4 @@ target_link_libraries(demo2 PRIVATE ncnn)
 #     VS_DEBUGGER_ENVIRONMENT "PATH=${ZZPKG_ROOT}/ncnn/20250916/windows-vs2022-shared/x64/bin;%PATH%"
 #   )
 # endif()
-igl_copy_dll(demo2)
+zzpkg_copy_dll(demo2)

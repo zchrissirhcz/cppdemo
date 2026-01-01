@@ -8,4 +8,4 @@ target_link_libraries(demo3 PRIVATE ${OpenCV_LIBS})
 #     VS_DEBUGGER_ENVIRONMENT "PATH=${ZZPKG_ROOT}/opencv/4.12.0/windows/x64/vc16/bin;%PATH%"
 #   )
 # endif()
-igl_copy_dll(demo3)
+zzpkg_copy_dll(demo3)

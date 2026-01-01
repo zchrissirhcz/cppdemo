@@ -13,7 +13,6 @@ if(MSVC)
   set(ZZPKG_PLATFORM "vs2022")
 endif()
 
-include(cmake/igl_copy_dll.cmake)
 include(cmake/zzpkg.cmake)
 
 ######################################################################
