@@ -4,7 +4,7 @@ source checkout_ffmpeg_n7.0.3.sh
 
 set -x
 
-build_dir="$work_dir/build-mac-arm64"
+build_dir="$work_dir/build-mac-aarch64"
 
 # Clean build
 # [ -d "$build_dir" ] && rm -rf "$build_dir"
@@ -14,7 +14,7 @@ build_dir="$work_dir/build-mac-arm64"
 mkdir -p "$build_dir"
 pushd "$build_dir"
 ../ffmpeg/configure \
-  --prefix="$ZZPKG_ROOT/$pkg_name/$version/mac-arm64" \
+  --prefix="$ZZPKG_ROOT/$pkg_name/$version/mac-aarch64" \
   --disable-everything \
   --enable-decoder=h264,aac \
   --enable-parser=h264,aac \

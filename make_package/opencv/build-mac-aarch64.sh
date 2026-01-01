@@ -5,14 +5,14 @@ source checkout_ocv_4.12.0.sh
 set -x
 # set -u  # 如果有这行，先注释掉或者正确初始化变量
 
-build_dir="$work_dir/build-mac-arm64"
+build_dir="$work_dir/build-mac-aarch64"
 
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"
 
 # Clean build
 [ -d "$build_dir" ] && rm -rf "$build_dir"
 
-FFMPEG_PREFIX="$ZZPKG_ROOT/ffmpeg/7.0.3/mac-arm64"
+FFMPEG_PREFIX="$ZZPKG_ROOT/ffmpeg/7.0.3/mac-aarch64"
 
 # 初始化 PKG_CONFIG_PATH（防止 set -u 报错）
 export PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}${PKG_CONFIG_PATH:+:}$FFMPEG_PREFIX/lib/pkgconfig"
@@ -34,7 +34,7 @@ CMAKE_GENERATOR_OPTIONS=(
     -DFFMPEG_LIBSWRESAMPLE="$FFMPEG_PREFIX/lib/libswresample.a"
 )
 
-install_dir="$ZZPKG_ROOT/$pkg_name/$version/mac-arm64"
+install_dir="$ZZPKG_ROOT/$pkg_name/$version/mac-aarch64"
 
 cmake "${CMAKE_GENERATOR_OPTIONS[@]}" "${CMAKE_OPTIONS[@]}" \
       -DCMAKE_INSTALL_PREFIX="$install_dir" \
