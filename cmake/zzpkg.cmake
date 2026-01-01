@@ -340,9 +340,15 @@ macro(zzpkg_setup_for_msvc)
 endmacro()
 
 
+macro(zzpkg_enable_position_independent_code)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endmacro()
+
+
 # Global settings
 zzpkg_detect_os()
 zzpkg_detect_platform()
 zzpkg_detect_arch()
+zzpkg_enable_position_independent_code()
 zzpkg_change_output_directories()
 zzpkg_setup_for_msvc()
