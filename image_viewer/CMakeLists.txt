@@ -4,7 +4,7 @@ target_link_libraries(image_viewer PRIVATE ${OpenCV_LIBS})
 if(WIN32)
   target_link_libraries(image_viewer PRIVATE ws2_32)
 endif()
-zzpkg_copy_dll(image_viewer)
+zzpkg_copy_required_dlls(image_viewer)
 
 if(MSVC)
   add_subdirectory(debugview_dll)

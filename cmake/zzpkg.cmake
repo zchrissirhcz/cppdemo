@@ -359,11 +359,6 @@ macro(zzpkg_setup_debug_postfix)
 endmacro()
 
 
-function(zzpkg_copy_dll TARGET)
-  include(${ZZPKG_CMAKE_DIR}/igl_copy_dll.cmake)
-  igl_copy_dll(${TARGET})
-endfunction()
-
 # Set default installation directory
 macro(zzpkg_set_default_install_dir)
   if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -378,6 +373,311 @@ macro(zzpkg_set_default_rpath)
     set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../lib")
   endif()
 endmacro()
+
+
+# function(zzpkg_get_target_dependencies TARGET OUTPUT_VAR)
+#   set(visited "")
+#   set(to_process "${TARGET}")
+#   set(all_deps "")
+#   while(to_process)
+#     list(GET to_process 0 current)
+#     list(REMOVE_AT to_process 0)
+
+#     list(FIND visited "${current}" found)
+#     if(NOT (found EQUAL -1))
+#       continue()
+#     endif()
+
+#     list(APPEND visited "${current}")
+#     if(NOT TARGET ${current})
+#       continue()
+#     endif()
+
+#     foreach(property LINK_LIBRARIES INTERFACE_LINK_LIBRARIES)
+#       get_target_property(deps ${current} ${property})
+#       if(deps)
+#         foreach(dep ${deps})
+#           list(APPEND to_process "${dep}")
+#           list(APPEND all_deps "${dep}")
+#         endforeach()
+#       endif()
+#     endforeach()
+#   endwhile()
+
+#   if(all_deps)
+#     list(REMOVE_DUPLICATES all_deps)
+#   endif()
+
+#   set(${OUTPUT_VAR} "${all_deps}" PARENT_SCOPE)
+# endfunction()
+
+
+# Transitively list all link libraries of a target (recursive call)
+# Modified from https://github.com/libigl/libigl/blob/main/cmake/igl/igl_copy_dll.cmake, GPL-3.0 / MPL-2.0
+function(zzpkg_get_target_dependencies_impl OUTPUT_VARIABLE TARGET)
+  get_target_property(_aliased ${TARGET} ALIASED_TARGET)
+  if(_aliased)
+    set(TARGET ${_aliased})
+  endif()
+
+  get_target_property(_IMPORTED ${TARGET} IMPORTED)
+  get_target_property(_TYPE ${TARGET} TYPE)
+  if(_IMPORTED OR (${_TYPE} STREQUAL "INTERFACE_LIBRARY"))
+    get_target_property(TARGET_DEPENDENCIES ${TARGET} INTERFACE_LINK_LIBRARIES)
+  else()
+    get_target_property(TARGET_DEPENDENCIES ${TARGET} LINK_LIBRARIES)
+  endif()
+
+  set(VISITED_TARGETS ${${OUTPUT_VARIABLE}})
+  foreach(DEPENDENCY IN ITEMS ${TARGET_DEPENDENCIES})
+    if(TARGET ${DEPENDENCY})
+      get_target_property(_aliased ${DEPENDENCY} ALIASED_TARGET)
+      if(_aliased)
+        set(DEPENDENCY ${_aliased})
+      endif()
+
+      if(NOT (DEPENDENCY IN_LIST VISITED_TARGETS))
+        list(APPEND VISITED_TARGETS ${DEPENDENCY})
+        zzpkg_get_target_dependencies_impl(VISITED_TARGETS ${DEPENDENCY})
+      endif()
+    endif()
+  endforeach()
+  set(${OUTPUT_VARIABLE} ${VISITED_TARGETS} PARENT_SCOPE)
+endfunction()
+
+
+# Transitively list all link libraries of a target
+function(zzpkg_get_target_dependencies OUTPUT_VARIABLE TARGET)
+  set(DISCOVERED_TARGETS "")
+  zzpkg_get_target_dependencies_impl(DISCOVERED_TARGETS ${TARGET})
+  set(${OUTPUT_VARIABLE} ${DISCOVERED_TARGETS} PARENT_SCOPE)
+endfunction()
+
+
+function(zzpkg_collect_target_dll_dirs TARGET OUTPUT_VAR)
+  if(NOT MSVC)
+    return()
+  endif()
+  zzpkg_get_target_dependencies(${TARGET} deps)
+  set(dll_dirs "")  
+  foreach(d ${deps})
+    if(NOT TARGET ${d})
+      continue()
+    endif()
+    # only consider shared library
+    get_target_property(d_type ${d} TYPE)
+    if(NOT d_type STREQUAL "SHARED_LIBRARY")
+      continue()
+    endif()    
+    get_target_property(d_is_imported ${d} IMPORTED)    
+    if(d_is_imported)
+      get_target_property(d_imported_location ${d} IMPORTED_LOCATION)
+      if(d_imported_location)
+        get_filename_component(d_imported_dir "${d_imported_location}" DIRECTORY)
+        list(APPEND dll_dirs "${d_imported_dir}")
+      endif()            
+      foreach(config DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+        get_target_property(d_imported_loc ${d} IMPORTED_LOCATION_${config})
+        if(d_imported_loc)
+          get_filename_component(d_imported_dir "${d_imported_loc}" DIRECTORY)
+          list(APPEND dll_dirs "${d_imported_dir}")
+        endif()
+      endforeach()
+    else()
+      get_target_property(d_runtime_dir ${d} RUNTIME_OUTPUT_DIRECTORY)
+      if(d_runtime_dir)
+        list(APPEND dll_dirs "${d_runtime_dir}")
+      else()
+        get_target_property(d_binary_dir ${d} BINARY_DIR)
+        if(d_binary_dir)
+          list(APPEND dll_dirs "${d_binary_dir}")
+        endif()
+      endif()            
+      foreach(config Debug Release RelWithDebInfo MinSizeRel)
+        string(TOUPPER ${config} config_upper)
+        get_target_property(config_dir ${TARGET} RUNTIME_OUTPUT_DIRECTORY_${config_upper})
+        if(config_dir)
+          list(APPEND dll_dirs "${config_dir}")
+        endif()
+      endforeach()
+    endif()
+  endforeach()
+
+  if(dll_dirs)
+    list(REMOVE_DUPLICATES dll_dirs)
+  endif()
+    
+  set(${OUTPUT_VAR} "${dll_dirs}" PARENT_SCOPE)
+endfunction()
+
+
+macro(zzpkg_early_return_if_not_msvc_exe TARGET)
+  if(NOT MSVC)
+    return()
+  endif()
+  if(NOT TARGET ${TARGET})
+    return()
+  endif()
+  get_target_property(TYPE ${TARGET} TYPE)
+  if(NOT ${TYPE} STREQUAL "EXECUTABLE")
+    return()
+  endif()
+endmacro()
+
+
+function(zzpkg_get_required_dlls TARGET OUTPUT_VAR)
+  zzpkg_early_return_if_not_msvc_exe(${TARGET})
+
+  # Sanity checks
+  if(CMAKE_CROSSCOMPILING OR (NOT WIN32))
+    return()
+  endif()
+
+  if(NOT TARGET ${TARGET})
+    message(STATUS "zzpkg_get_required_dlls() was called with a non-target: ${TARGET}")
+    return()
+  endif()
+
+  # Sanity checks
+  get_target_property(TYPE ${TARGET} TYPE)
+  if(NOT ${TYPE} STREQUAL "EXECUTABLE")
+    message(FATAL_ERROR "zzpkg_get_required_dlls() was called on a non-executable target: ${TARGET}")
+  endif()
+
+  # Retrieve all target dependencies
+  zzpkg_get_target_dependencies(TARGET_DEPENDENCIES ${TARGET})
+
+  set(required_dlls)
+  foreach(DEPENDENCY IN LISTS TARGET_DEPENDENCIES)
+    get_target_property(TYPE ${DEPENDENCY} TYPE)
+    if(NOT (${TYPE} STREQUAL "SHARED_LIBRARY" OR ${TYPE} STREQUAL "MODULE_LIBRARY"))
+      continue()
+    endif()
+    get_target_property(IMPORTED ${DEPENDENCY} IMPORTED)
+    if(IMPORTED)
+      # get where the imported dll is located
+      get_target_property(IMPORT_LOCATION ${DEPENDENCY} IMPORTED_LOCATION)
+      if(NOT IMPORT_LOCATION)
+        # try per-configuration location
+        foreach(config DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+          get_target_property(IMPORT_LOCATION ${DEPENDENCY} IMPORTED_LOCATION_${config})
+          if(IMPORT_LOCATION)
+            break()
+          endif()
+        endforeach()
+      endif()
+      if(NOT IMPORT_LOCATION)
+        continue()
+      endif()
+      list(APPEND required_dlls "${IMPORT_LOCATION}")
+      
+      # scan extra dll files in same dir
+      get_filename_component(IMPORT_DIR "${IMPORT_LOCATION}" DIRECTORY)
+      file(GLOB EXTRA_DLLS "${IMPORT_DIR}/*.dll")
+      foreach(extra_dll IN LISTS EXTRA_DLLS)
+        if(extra_dll STREQUAL IMPORT_LOCATION)
+          continue()
+        endif()
+        set(should_add TRUE)
+        foreach(x d _d)
+          # remove postfix of extra_dll
+          string(REGEX REPLACE "\\.dll$" "" extra_dll_base "${extra_dll}")
+          string(REGEX REPLACE "\\.dll$" "" import_location_base "${IMPORT_LOCATION}")
+          if("${extra_dll_base}${x}" STREQUAL "${import_location_base}")
+            set(should_add FALSE)
+            continue()
+          endif()
+          if("${extra_dll_base}" STREQUAL "${import_location_base}${x}")
+            set(should_add FALSE)
+            continue()
+          endif()
+        endforeach()
+        if(should_add)
+          list(APPEND required_dlls "${extra_dll}")
+        endif()
+      endforeach()
+    endif()
+  endforeach()
+
+  list(REMOVE_DUPLICATES required_dlls)
+  set(${OUTPUT_VAR} "${required_dlls}" PARENT_SCOPE)
+endfunction()
+
+
+function(zzpkg_copy_required_dlls TARGET)
+  zzpkg_early_return_if_not_msvc_exe(${TARGET})
+
+  zzpkg_get_required_dlls(${TARGET} REQUIRED_DLLS)
+
+  # set the name of file to be written
+  set(COPY_DLLS_SCRIPT_DIR "${CMAKE_BINARY_DIR}/zzpkg_copy_required_dlls")
+  file(MAKE_DIRECTORY "${COPY_DLLS_SCRIPT_DIR}")
+  if(DEFINED CMAKE_CONFIGURATION_TYPES)
+    set(COPY_SCRIPT "${COPY_DLLS_SCRIPT_DIR}/${TARGET}_$<CONFIG>.cmake")
+  else()
+    set(COPY_SCRIPT "${COPY_DLLS_SCRIPT_DIR}/${TARGET}.cmake")
+  endif()
+
+  message(STATUS "COPY_SCRIPT: ${COPY_SCRIPT}")
+  add_custom_command(
+    TARGET ${TARGET}
+    PRE_LINK
+    COMMAND ${CMAKE_COMMAND} -E touch "${COPY_SCRIPT}"
+    COMMAND ${CMAKE_COMMAND} -P "${COPY_SCRIPT}"
+    COMMENT "Copying dlls for target ${TARGET}"
+  )
+
+  string(REPLACE ";" "\n" REQUIRED_DLLS_STR "${REQUIRED_DLLS}")
+
+  set(COPY_SCRIPT_CONTENT "")
+  string(APPEND COPY_SCRIPT_CONTENT
+    "set(required_dlls \n${REQUIRED_DLLS_STR}\n)\n\n"
+    #"list(REMOVE_DUPLICATES required_dlls)\n\n"
+    "foreach(dll IN ITEMS \${required_dlls})\n"
+    "  if(EXISTS \"\${dll}\")\n    "
+        "execute_process(COMMAND \${CMAKE_COMMAND} -E copy_if_different "
+        "\"\${dll}\" \"$<TARGET_FILE_DIR:${TARGET}>/\")\n"
+    "  endif()\n"
+  )
+  string(APPEND COPY_SCRIPT_CONTENT "endforeach()\n")
+
+  # Finally generate one script for each configuration supported by this generator
+  message(STATUS "Populating copy rules for target: ${TARGET}")
+  file(GENERATE
+    OUTPUT "${COPY_SCRIPT}"
+    CONTENT "${COPY_SCRIPT_CONTENT}"
+  )
+endfunction()
+
+
+function(zzpkg_generate_debug_env_files TARGET)
+  zzpkg_early_return_if_not_msvc_exe(${TARGET})
+
+  zzpkg_get_required_dlls(${TARGET} REQUIRED_DLLS)
+
+  set(EXTRA_PATHS "")
+  foreach(dll ${REQUIRED_DLLS})
+    # get directory of dll
+    get_filename_component(dll_dir "${dll}" DIRECTORY)
+    list(APPEND EXTRA_PATHS "${dll_dir}")
+  endforeach()
+  list(REMOVE_DUPLICATES EXTRA_PATHS)
+  set(EXTRA_PATHS_STR "PATH=${EXTRA_PATHS};%PATH%")
+
+  set(DEBUG_ENV_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+  #set(DEBUG_ENV_DIR "${CMAKE_SOURCE_DIR}/.vscode")
+  if(DEFINED CMAKE_CONFIGURATION_TYPES)
+    set(DEBUG_ENV_SCRIPT "${DEBUG_ENV_DIR}/${TARGET}_$<CONFIG>.env")
+  else()
+    set(DEBUG_ENV_SCRIPT "${DEBUG_ENV_DIR}/${TARGET}_${CMAKE_BUILD_TYPE}.env")
+  endif()
+  file(MAKE_DIRECTORY "${DEBUG_ENV_DIR}")
+  string(APPEND DEBUG_ENV_CONTENT "${EXTRA_PATHS_STR}\n")
+  file(GENERATE
+    OUTPUT "${DEBUG_ENV_SCRIPT}"
+    CONTENT "${DEBUG_ENV_CONTENT}"
+  )
+endfunction()
 
 
 # Global settings
