@@ -138,7 +138,7 @@ macro(zzpkg_find PACKAGE_RECIPE)
   if(CUSTOM_PACKAGE_ROOT)
     list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${CUSTOM_PACKAGE_ROOT})
   endif()
-  if(PACKAGE_HINT)
+  if(PACKAGE_HINT AND EXISTS ${PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT})
     list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT})
   endif()
   list(APPEND CANDIDATE_PACKAGE_ROOT_LIST ${PACKAGE_PLATFORM_DEPENDENT_ROOT})
@@ -166,45 +166,57 @@ macro(zzpkg_find PACKAGE_RECIPE)
     # 常见的 CMake config 文件位置
     set(candidate_subdirs
       ""
-      # ncnn, glfw3
+      cmake # OpenCV Linux, OPENCV_CONFIG_INSTALL_PATH="cmake"
+      
+      # ncnn, glfw
       lib/cmake/${PACKAGE_NAME}
-
-      # OpenCV, macOS/Linux, Default; glfw3 macOS, Default
-      lib/cmake/${PACKAGE_NAME}${PACKAGE_VERSION_MAJOR}
-
-      lib/cmake
-      share/cmake/${PACKAGE_NAME}
-      share/${PACKAGE_NAME}
-
-      # OpenCV Windows, OPENCV_CONFIG_INSTALL_PATH="cmake"
-      cmake/lib
-
-      # OpenCV Windows, Default
-      x64/vc18/lib
-      x64/vc17/lib
-      x64/vc16/lib
-      x64/vc15/lib
-
-      lib
-
-      # OpenCV Android, Default
-      sdk/native/jni
-      sdk/native/jni/abi-${ANDROID_ABI}
-      # OpenCV Android, OPENCV_CONFIG_INSTALL_PATH="cmake"
-      cmake/abi-${ANDROID_ABI}
-
-      # OpenCV Windows, BUILD_SHARED_LIBS=OFF, OPENCV_CONFIG_INSTALL_PATH="cmake"
-      cmake/staticlib
-
-      # OpenCV Linux, OPENCV_CONFIG_INSTALL_PATH="cmake"
-      cmake
     )
+
+    if(NOT(PACKAGE_NAME MATCHES ".*[0-9]$"))
+      list(APPEND candidate_subdirs
+        # OpenCV, macOS/Linux, Default; glfw3 macOS, Default
+        lib/cmake/${PACKAGE_NAME}${PACKAGE_VERSION_MAJOR}
+      )
+    endif()
+
+    # lib/cmake
+    # lib
+    # share/cmake/${PACKAGE_NAME}
+    # share/${PACKAGE_NAME}
+
+    if(ZZPKG_OS STREQUAL "windows")
+      list(APPEND candidate_subdirs
+        # OpenCV Windows, OPENCV_CONFIG_INSTALL_PATH="cmake"
+        cmake/lib
+
+        # OpenCV Windows, BUILD_SHARED_LIBS=ON, Default
+        x64/vc18/bin
+        x64/vc17/bin
+        x64/vc16/bin
+        x64/vc15/bin
+
+        # OpenCV Windows, BUILD_SHARED_LIBS=OFF, OPENCV_CONFIG_INSTALL_PATH="cmake"
+        cmake/staticlib
+      )
+    endif()
+
+    if(ZZPKG_OS STREQUAL "android")
+      list(APPEND candidate_subdirs
+        # OpenCV Android, Default
+        sdk/native/jni
+        sdk/native/jni/abi-${ANDROID_ABI}
+        # OpenCV Android, OPENCV_CONFIG_INSTALL_PATH="cmake"
+        cmake/abi-${ANDROID_ABI}
+      )
+    endif()
 
     # 尝试查找 Config 文件
-    set(candidate_targets
-      ${PACKAGE_NAME}${PACKAGE_VERSION_MAJOR} # glfw3
-      ${PACKAGE_NAME} # normal
-    )
+    set(candidate_targets ${PACKAGE_NAME})
+    # 判断 PACKAGE_NAME 最后一个字符是否为数字, 如果不是数字，则添加 major 版本后缀的 target 名称
+    if ((NOT PACKAGE_NAME MATCHES ".*[0-9]$") AND (PACKAGE_VERSION_MAJOR MATCHES "^[0-9]+$"))
+      list(APPEND candidate_targets "${PACKAGE_NAME}${PACKAGE_VERSION_MAJOR}")
+    endif()
+
     foreach(targetName ${candidate_targets})
       foreach(subdir ${candidate_subdirs})
         if(PACKAGE_FOUND)
@@ -216,7 +228,7 @@ macro(zzpkg_find PACKAGE_RECIPE)
           "${config_path}/${targetName}-config.cmake"
         )
         foreach(config_file ${config_files})
-          message(STATUS "    Try config file: ${config_file}")
+          # message(STATUS "    Try config file: ${config_file}")
           if(EXISTS "${config_file}")
             set(${targetName}_DIR "${config_path}")
             message(STATUS "  find_package(${targetName}) with config file ${config_file}")
@@ -238,36 +250,31 @@ macro(zzpkg_find PACKAGE_RECIPE)
   set_property(GLOBAL PROPERTY ${PACKAGE_NAME}_VERSION "${PACKAGE_VERSION}")
   set_property(GLOBAL PROPERTY ${PACKAGE_NAME}_RECIPE "${PACKAGE_RECIPE}")
   
-  message(STATUS "Successfully imported ${PACKAGE_NAME} (${PACKAGE_RECIPE})")
+  message(STATUS "  Successfully find ${PACKAGE_RECIPE}")
   
-  # 清理变量
+  # clean up variables
+  unset(_recipe_parts)
+  unset(_recipe_parts_len)
+  unset(PACKAGE_NAME)
+  unset(PACKAGE_VERSION)
+  unset(PACKAGE_HINT)
+  unset(_version_parts)
+  unset(PACKAGE_VERSION_MAJOR)
+  unset(_pkg_imported)
+  unset(_pkg_version)
   unset(ARG_WINDOWS)
   unset(ARG_LINUX)
   unset(ARG_ANDROID)
   unset(ARG_MAC)
-  unset(CUSTOM_PACKAGE_ROOT)
-  unset(candidate_subdirs)
-  unset(subdir)
-  unset(config_path)
-  unset(config_files)
-  unset(config_file)
   unset(PACKAGE_PLATFORM_INDEPENDENT_ROOT)
   unset(PACKAGE_PLATFORM_DEPENDENT_ROOT)
   unset(PACKAGE_PLATFORM_DEPENDENT_ROOT_WITH_HINT)
   unset(CANDIDATE_PACKAGE_ROOT_LIST)
+  unset(CUSTOM_PACKAGE_ROOT)
   unset(PACKAGE_FOUND)
-  unset(PACKAGE_ROOT)
-  unset(PACKAGE_NAME)
-  unset(PACKAGE_VERSION)
-  unset(PACKAGE_VERSION_MAJOR)
-  unset(PACKAGE_HINT)
-  unset(_recipe_parts)
-  unset(_recipe_parts_len)
-  unset(_pkg_recipe)
-  unset(_pkg_imported)
-  unset(_pkg_version)
-  unset(_version_parts)
-  unset(CANDIDATE_PACKAGE_ROOT_LIST)
+  unset(candidate_subdirs)
+  unset(config_path)
+  unset(config_files)
 endmacro()
 
 
