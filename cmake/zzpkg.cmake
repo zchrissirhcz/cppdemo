@@ -201,10 +201,10 @@ macro(zzpkg_find PACKAGE_RECIPE)
     if(ZZPKG_OS STREQUAL "windows")
       list(APPEND candidate_subdirs
         # OpenCV Windows, BUILD_SHARED_LIBS=ON, Default
-        x64/vc18/bin
-        x64/vc17/bin
-        x64/vc16/bin
-        x64/vc15/bin
+        x64/vc18/lib
+        x64/vc17/lib
+        x64/vc16/lib
+        x64/vc15/lib
 
         # OpenCV Windows, BUILD_SHARED_LIBS=OFF, OPENCV_CONFIG_INSTALL_PATH="cmake"
         cmake/staticlib
