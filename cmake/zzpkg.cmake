@@ -554,7 +554,6 @@ function(zzpkg_get_required_dlls TARGET OUTPUT_VAR)
       continue()
     endif()
     get_target_property(IMPORTED ${DEPENDENCY} IMPORTED)
-    message(STATUS "[debug] ${DEPENDENCY} is of type ${TYPE}, imported: ${IMPORTED}")
     if(IMPORTED)
       # get where the imported dll is located
       get_target_property(IMPORT_LOCATION ${DEPENDENCY} IMPORTED_LOCATION)
@@ -625,6 +624,12 @@ function(zzpkg_get_required_dlls TARGET OUTPUT_VAR)
 endfunction()
 
 
+# Generate (configure stage) and run script (post build) to copy required DLLs to target output directory
+# Without this, launching or debugging the executable in VSCode may fail with error 0xC0000135
+#
+# Usage:
+#   in CMakeLists.txt:
+#     zzpkg_copy_required_dlls(<target>)
 function(zzpkg_copy_required_dlls TARGET)
   zzpkg_early_return_if_not_msvc_exe(${TARGET})
 
@@ -639,7 +644,6 @@ function(zzpkg_copy_required_dlls TARGET)
     set(COPY_SCRIPT "${COPY_DLLS_SCRIPT_DIR}/${TARGET}.cmake")
   endif()
 
-  message(STATUS "COPY_SCRIPT: ${COPY_SCRIPT}")
   add_custom_command(
     TARGET ${TARGET}
     PRE_LINK
@@ -663,7 +667,7 @@ function(zzpkg_copy_required_dlls TARGET)
   string(APPEND COPY_SCRIPT_CONTENT "endforeach()\n")
 
   # Finally generate one script for each configuration supported by this generator
-  message(STATUS "Populating copy rules for target: ${TARGET}")
+  message(STATUS "Populating copy rules for target: ${TARGET} via script: ${COPY_SCRIPT}")
   file(GENERATE
     OUTPUT "${COPY_SCRIPT}"
     CONTENT "${COPY_SCRIPT_CONTENT}"
@@ -671,19 +675,40 @@ function(zzpkg_copy_required_dlls TARGET)
 endfunction()
 
 
-function(zzpkg_generate_debug_env_files TARGET)
+# Generate envFile for running/debugging executable in VSCode
+# This envFile will set PATH to include directories of required DLLs
+# Without this, launching or debugging the executable in VSCode may fail with error 0xC0000135
+# Support MSBuild and Ninja generators
+#
+# Usage:
+#   in CMakeLists.txt:
+#     zzpkg_generate_debug_envfile(<target>)
+#   in .vscode/launch.json:
+#     {
+#       "name": "Launch Program",
+#       "type": "cppvsdbg",
+#       "request": "launch",
+#       "program": "${workspaceFolder}/out/<target>.exe",
+#       "args": [],
+#       "stopAtEntry": false,
+#       "cwd": "${workspaceFolder}",
+#       "environment": [],
+#       "externalConsole": false,
+#       "envFile": "${workspaceFolder}/out/<target>_Debug.env"
+#     }
+function(zzpkg_generate_debug_envfile TARGET)
   zzpkg_early_return_if_not_msvc_exe(${TARGET})
 
   zzpkg_get_required_dlls(${TARGET} REQUIRED_DLLS)
 
-  set(EXTRA_PATHS "")
+  set(DLL_DIRS "")
   foreach(dll ${REQUIRED_DLLS})
     # get directory of dll
     get_filename_component(dll_dir "${dll}" DIRECTORY)
-    list(APPEND EXTRA_PATHS "${dll_dir}")
+    list(APPEND DLL_DIRS "${dll_dir}")
   endforeach()
-  list(REMOVE_DUPLICATES EXTRA_PATHS)
-  set(EXTRA_PATHS_STR "PATH=${EXTRA_PATHS};%PATH%")
+  list(REMOVE_DUPLICATES DLL_DIRS)
+  set(NEW_PATH_STR "PATH=${DLL_DIRS};%PATH%")
 
   set(DEBUG_ENV_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
   #set(DEBUG_ENV_DIR "${CMAKE_SOURCE_DIR}/.vscode")
@@ -693,11 +718,94 @@ function(zzpkg_generate_debug_env_files TARGET)
     set(DEBUG_ENV_SCRIPT "${DEBUG_ENV_DIR}/${TARGET}_${CMAKE_BUILD_TYPE}.env")
   endif()
   file(MAKE_DIRECTORY "${DEBUG_ENV_DIR}")
-  string(APPEND DEBUG_ENV_CONTENT "${EXTRA_PATHS_STR}\n")
+  string(APPEND DEBUG_ENV_CONTENT "${NEW_PATH_STR}\n")
   file(GENERATE
     OUTPUT "${DEBUG_ENV_SCRIPT}"
     CONTENT "${DEBUG_ENV_CONTENT}"
   )
+endfunction()
+
+
+# Set VS_DEBUGGER_ENVIRONMENT property for executable target in Visual Studio
+# This will set environment variables for debugger in Visual Studio IDE
+# Without this, launching or debugging the executable in VSCode may fail with error 0xC0000135
+#
+# Usage:
+#   in CMakeLists.txt:
+#     zzpkg_set_vs_debugger_environment(<target>)
+#
+# References:
+# - https://cmake.org/cmake/help/latest/prop_tgt/VS_DEBUGGER_ENVIRONMENT.html
+function(zzpkg_set_vs_debugger_environment TARGET)
+  # skip non-MSVC generators
+  if(NOT (CMAKE_GENERATOR MATCHES "Visual Studio"))
+    return()
+  endif()
+
+  # skip non-executable targets
+  get_target_property(TARGET_TYPE ${TARGET} TYPE)
+  if(NOT TARGET_TYPE STREQUAL "EXECUTABLE")
+    return()
+  endif()
+
+  # handle asan related environment variables
+  set(VC_DIR)
+  set(ASAN_SYMBOLIZER_PATH)
+  set(HAS_ASAN FALSE)
+  if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" OR CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # Check if TARGET is with ASAN enabled
+    get_target_property(TARGET_COMPILE_OPTIONS ${TARGET} COMPILE_OPTIONS)
+    message(STATUS "TARGET_COMPILE_OPTIONS for target ${TARGET}: ${TARGET_COMPILE_OPTIONS}")
+    if(TARGET_COMPILE_OPTIONS MATCHES "/fsanitize=address")
+      set(HAS_ASAN TRUE)
+      # https://devblogs.microsoft.com/cppblog/msvc-address-sanitizer-one-dll-for-all-runtime-configurations/
+      if((CMAKE_C_COMPILER_VERSION STRGREATER_EQUAL 17.7) OR (CMAKE_CXX_COMPILER_VERSION STRGREATER_EQUAL 17.7))
+        if((CMAKE_GENERATOR_PLATFORM MATCHES "x64") OR ((CMAKE_SIZEOF_VOID_P EQUAL 8) AND (CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")))
+          set(VC_DIR "$(VC_ExecutablePath_x64)")
+          set(ASAN_SYMBOLIZER_PATH "$(VC_ExecutablePath_x64)")
+        elseif((CMAKE_GENERATOR_PLATFORM MATCHES "Win32") OR ((CMAKE_SIZEOF_VOID_P EQUAL 4) AND (CMAKE_SYSTEM_PROCESSOR STREQUAL "^(x86|AMD64)$")))
+          set(VC_DIR "$(VC_ExecutablePath_x86)")
+          set(ASAN_SYMBOLIZER_PATH "$(VC_ExecutablePath_x86)")
+        endif()
+      endif()
+    endif()
+  endif()
+
+  # collect directories of required dlls, save them in EXTRA_DIRS
+  zzpkg_get_required_dlls(${TARGET} REQUIRED_DLLS)
+  set(DLL_DIRS)
+  foreach(dll ${REQUIRED_DLLS})
+    # get directory of dll
+    get_filename_component(dll_dir "${dll}" DIRECTORY)
+    list(APPEND DLL_DIRS "${dll_dir}")
+  endforeach()
+  list(REMOVE_DUPLICATES DLL_DIRS)
+
+  if(HAS_ASAN)
+    if(DLL_DIRS)
+      set(VS_DEBUGGER_ENVIRONMENT "PATH=${DLL_DIRS};${VC_DIR};%PATH%\nASAN_SYMBOLIZER_PATH=${ASAN_SYMBOLIZER_PATH}")
+    else()
+      set(VS_DEBUGGER_ENVIRONMENT "PATH=${VC_DIR};%PATH%\nASAN_SYMBOLIZER_PATH=${ASAN_SYMBOLIZER_PATH}")
+    endif()
+  else()
+    if(DLL_DIRS)
+      set(VS_DEBUGGER_ENVIRONMENT "PATH=${DLL_DIRS};%PATH%")
+    endif()
+  endif()
+
+  get_target_property(old_vs_debugger_environment ${TARGET} VS_DEBUGGER_ENVIRONMENT)
+  if(${old_vs_debugger_environment})
+    message(FATAL_ERROR "existing VS_DEBUGGER_ENVIRONMENT found for target ${TARGET}, please resolve the conflict")
+  endif()
+
+  # set the VS_DEBUGGER_ENVIRONMENT property
+  if(VS_DEBUGGER_ENVIRONMENT)
+    set_target_properties(
+      ${TARGET} PROPERTIES
+      VS_DEBUGGER_ENVIRONMENT "${VS_DEBUGGER_ENVIRONMENT}"
+    )
+    message(STATUS "Set VS_DEBUGGER_ENVIRONMENT for target ${TARGET}:\n${VS_DEBUGGER_ENVIRONMENT}")
+  endif()
 endfunction()
 
 
