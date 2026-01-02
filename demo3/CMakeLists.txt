@@ -1,4 +1,4 @@
-zzpkg_find(OpenCV/4.12.0)
+zzpkg_find(OpenCV/4.12.0:static)
 add_executable(demo3 demo3.cpp)
 target_link_libraries(demo3 PRIVATE ${OpenCV_LIBS})
 
