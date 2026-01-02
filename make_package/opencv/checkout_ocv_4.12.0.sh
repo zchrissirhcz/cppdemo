@@ -25,6 +25,12 @@ if [[ -z "$SKIP_CLONE" ]]; then
             "https://gitee.com/opencv/opencv_contrib.git" \
             "$work_dir/opencv_contrib" \
             "$tag"
+
+    # checkout_repo "opencv_3rdparty" \
+    #         "https://github.com/opencv/opencv_3rdparty.git" \
+    #         "https://github.com/opencv/opencv_3rdparty.git" \
+    #         "$work_dir/opencv_3rdparty" \
+    #         "$tag"
 fi
 
 CMAKE_OPTIONS=(
@@ -35,7 +41,6 @@ CMAKE_OPTIONS=(
     -DWITH_OPENCL=OFF
     -DBUILD_EXAMPLES=OFF
     -DINSTALL_CREATE_DISTRIB=ON
-    -DOPENCV_DOWNLOAD_MIRROR_ID="gitcode"
     -DBUILD_opencv_dnn=OFF
     -DCMAKE_DEBUG_POSTFIX="_d"
     -DBUILD_opencv_world=OFF
@@ -44,4 +49,12 @@ CMAKE_OPTIONS=(
     -DOPENCV_CONFIG_INSTALL_PATH="cmake"
     -DOPENCV_3P_LIB_INSTALL_PATH="lib"
     #-DOPENCV_EXTRA_MODULES_PATH="$contrib_dir/modules"
+    -DWITH_FFMPEG=ON
+    -DVIDEOIO_ENABLE_PLUGINS=ON
+    -DWITH_PROTOBUF=OFF
+    -DBUILD_PROTOBUF=OFF
+    -DBUILD_JAVA=OFF
+    -DWITH_VTK=OFF
+    -DWITH_ADE=OFF
+    -DOPENCV_DOWNLOAD_PATH="$work_dir/opencv_cache"
 )
