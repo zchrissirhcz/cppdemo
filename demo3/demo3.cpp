@@ -26,13 +26,15 @@ int main()
     printf("hello world\n");
 
     // Silence OpenCV internal logger
-    cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
+    //cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
 
     std::cout << cv::getBuildInformation() << std::endl; // Add this line
 
+    //return 0;
     const std::string ZZPKG_ROOT = get_zzpkg_root();
     printf("ZZPKG_ROOT: %s\n", ZZPKG_ROOT.c_str());
-    const std::string video_path = ZZPKG_ROOT + "/opencv-src/4.12.0/samples/cpp/tutorial_code/calib3d/real_time_pose_estimation/Data/box.mp4";
+    //const std::string video_path = ZZPKG_ROOT + "/opencv-src/4.12.0/samples/cpp/tutorial_code/calib3d/real_time_pose_estimation/Data/box.mp4";
+    const std::string video_path = ZZPKG_ROOT + "/h264_data/0.1/3min_1080p.h264";
     printf("video_path: %s\n", video_path.c_str());
 
     cv::VideoCapture cap(video_path);
