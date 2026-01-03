@@ -15,10 +15,10 @@ source_dir="$work_dir/glfw"
 
 if [[ -z "$SKIP_CLONE" ]]; then
     checkout_repo "glfw" \
-            "https://github.com/glfw/glfw.git" \
-            "https://gitee.com/mirrors/glfw.git" \
-            "$work_dir/glfw" \
-            "$tag"
+        "https://github.com/glfw/glfw.git" \
+        "https://gitee.com/mirrors/glfw.git" \
+        "$work_dir/glfw" \
+        "$tag"
 fi
 
 CMAKE_OPTIONS=(

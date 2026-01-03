@@ -15,22 +15,22 @@ source_dir="$work_dir/opencv"
 
 if [[ -z "$SKIP_CLONE" ]]; then
     checkout_repo "opencv" \
-            "https://github.com/opencv/opencv.git" \
-            "https://gitee.com/opencv/opencv.git" \
-            "$work_dir/opencv" \
-            "$tag"
+        "https://github.com/opencv/opencv.git" \
+        "https://gitee.com/opencv/opencv.git" \
+        "$work_dir/opencv" \
+        "$tag"
 
     checkout_repo "opencv_contrib" \
-            "https://github.com/opencv/opencv_contrib.git" \
-            "https://gitee.com/opencv/opencv_contrib.git" \
-            "$work_dir/opencv_contrib" \
-            "$tag"
+        "https://github.com/opencv/opencv_contrib.git" \
+        "https://gitee.com/opencv/opencv_contrib.git" \
+        "$work_dir/opencv_contrib" \
+        "$tag"
 
     # checkout_repo "opencv_3rdparty" \
-    #         "https://github.com/opencv/opencv_3rdparty.git" \
-    #         "https://github.com/opencv/opencv_3rdparty.git" \
-    #         "$work_dir/opencv_3rdparty" \
-    #         "$tag"
+    #     "https://github.com/opencv/opencv_3rdparty.git" \
+    #     "https://github.com/opencv/opencv_3rdparty.git" \
+    #     "$work_dir/opencv_3rdparty" \
+    #     "$tag"
 fi
 
 CMAKE_OPTIONS=(

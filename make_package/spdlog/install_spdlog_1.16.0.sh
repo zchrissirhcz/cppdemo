@@ -15,10 +15,10 @@ source_dir="$work_dir/spdlog"
 
 if [[ -z "$SKIP_CLONE" ]]; then
     checkout_repo "spdlog" \
-            "https://github.com/gabime/spdlog.git" \
-            "https://gitee.com/mirrors_nigels-com/spdlog.git" \
-            "$source_dir" \
-            "$tag"
+        "https://github.com/gabime/spdlog.git" \
+        "https://gitee.com/mirrors_nigels-com/spdlog.git" \
+        "$source_dir" \
+        "$tag"
 fi
 
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"

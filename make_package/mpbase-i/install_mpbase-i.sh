@@ -15,7 +15,7 @@ source_dir="$work_dir/ArcSoft_FreeSDK_Demo"
 if [[ -z "$SKIP_CLONE" ]]; then
     checkout_repo "cereal" \
         "https://github.com/smartkids77/ArcSoft_FreeSDK_Demo.git" \
-        "https://github.com/smartkids77/ArcSoft_FreeSDK_Demo.git" \
+        "" \
         "$source_dir" \
         "$branch"
 fi

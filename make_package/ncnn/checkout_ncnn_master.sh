@@ -15,10 +15,10 @@ source_dir="$work_dir/ncnn"
 
 if [[ -z "$SKIP_CLONE" ]]; then
     checkout_repo "ncnn" \
-            "https://github.com/Tencent/ncnn.git" \
-            "https://gitee.com/Tencent/ncnn.git" \
-            "$work_dir/ncnn" \
-            "$branch"
+        "https://github.com/Tencent/ncnn.git" \
+        "https://gitee.com/Tencent/ncnn.git" \
+        "$work_dir/ncnn" \
+        "$branch"
 fi
 
 CMAKE_OPTIONS=(

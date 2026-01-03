@@ -56,9 +56,15 @@ mark_repo_updated() {
 checkout_repo() {
     local repo_name="$1"
     local official_url="$2"
-    local mirror_url="$3"
+    local mirror_url="${3:-}"
     local repo_path="$4"
     local target_ref="$5"
+
+    # 如果 mirror_url 为空或与 official_url 相同，则不使用镜像
+    local use_mirror=false
+    if [ -n "$mirror_url" ] && [ "$(normalize_git_url "$mirror_url")" != "$(normalize_git_url "$official_url")" ]; then
+        use_mirror=true
+    fi
 
     # Handle existing directory that is not a git repo
     if [ -d "$repo_path" ] && [ ! -d "$repo_path/.git" ]; then
@@ -74,14 +80,22 @@ checkout_repo() {
 
     # Clone if not exists
     if [ ! -d "$repo_path" ]; then
-        echo "Cloning $repo_name from mirror..."
-        git clone "$mirror_url" "$repo_path" || {
-            echo "Mirror clone failed, trying official..."
+        if [ "$use_mirror" = true ]; then
+            echo "Cloning $repo_name from mirror..."
+            git clone "$mirror_url" "$repo_path" || {
+                echo "Mirror clone failed, trying official..."
+                git clone "$official_url" "$repo_path" || {
+                    echo "Failed to clone from both sources." >&2
+                    return 1
+                }
+            }
+        else
+            echo "Cloning $repo_name from official..."
             git clone "$official_url" "$repo_path" || {
-                echo "Failed to clone from both sources." >&2
+                echo "Failed to clone repository." >&2
                 return 1
             }
-        }
+        fi
         mark_repo_updated "$repo_path"
     fi
 
@@ -95,8 +109,13 @@ checkout_repo() {
     local current_origin
     current_origin=$(git -C "$repo_path" remote get-url origin 2>/dev/null)
 
-    if [ "$current_origin" = "$mirror_url" ]; then
+    if [ "$use_mirror" = true ] && [ "$current_origin" = "$mirror_url" ]; then
         echo "Renaming origin to mirror and adding official as origin..."
+        # 检查 mirror remote 是否已存在
+        if git -C "$repo_path" remote get-url mirror >/dev/null 2>&1; then
+            echo "Mirror remote already exists, removing it first..."
+            git -C "$repo_path" remote remove mirror
+        fi
         git -C "$repo_path" remote rename origin mirror
         git -C "$repo_path" remote add origin "$official_url"
         git -C "$repo_path" fetch origin --tags

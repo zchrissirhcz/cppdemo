@@ -15,8 +15,8 @@ source_dir="$work_dir/ffmpeg"
 
 if [[ -z "$SKIP_CLONE" ]]; then
     checkout_repo "ffmpeg" \
-            "https://git.ffmpeg.org/ffmpeg.git" \
-            "https://gitee.com/mirrors/ffmpeg.git" \
-            "$work_dir/ffmpeg" \
-            "$tag"
+        "https://git.ffmpeg.org/ffmpeg.git" \
+        "https://gitee.com/mirrors/ffmpeg.git" \
+        "$work_dir/ffmpeg" \
+        "$tag"
 fi
