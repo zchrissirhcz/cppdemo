@@ -21,13 +21,14 @@ macro(zzpkg_detect_os)
     set(ZZPKG_OS "mac")
   endif()
   if(NOT(ZZPKG_OS MATCHES "^(windows|android|linux|mac)$"))
-    message(FATAL_ERROR "unknown platform: ${ZZPKG_OS}")
+    message(FATAL_ERROR "unknown OS: ${ZZPKG_OS}")
   endif()
 endmacro()
 
 # determine target platform
 macro(zzpkg_detect_platform)
   if(NOT ZZPKG_PLATFORM)
+    message(STATUS "No ZZPKG_PLATFORM specified, setting it to ZZPKG_OS: ${ZZPKG_OS}")
     set(ZZPKG_PLATFORM ${ZZPKG_OS})
   endif()
 endmacro()
@@ -755,7 +756,6 @@ function(zzpkg_set_vs_debugger_environment TARGET)
   if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" OR CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Check if TARGET is with ASAN enabled
     get_target_property(TARGET_COMPILE_OPTIONS ${TARGET} COMPILE_OPTIONS)
-    message(STATUS "TARGET_COMPILE_OPTIONS for target ${TARGET}: ${TARGET_COMPILE_OPTIONS}")
     if(TARGET_COMPILE_OPTIONS MATCHES "/fsanitize=address")
       set(HAS_ASAN TRUE)
       # https://devblogs.microsoft.com/cppblog/msvc-address-sanitizer-one-dll-for-all-runtime-configurations/
