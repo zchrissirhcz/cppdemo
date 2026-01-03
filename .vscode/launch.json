@@ -100,7 +100,7 @@
     "configurations": [
         {
             // https://learn.microsoft.com/en-us/visualstudio/debugger/debugger-feature-tour?view=vs-2022
-            "name": "demo3",
+            "name": "demo3 (Windows MSVC)",
             "type": "cppvsdbg",
             "program": "${workspaceFolder}/build/out/demo3.exe",
             "request": "launch",
@@ -110,6 +110,19 @@
             "args": [],
             "envFile": "${workspaceFolder}/build/out/demo3_Debug.env"
         },
+        {
+            "name": "demo3 (macOS LLDB)",
+            "type": "lldb",
+            "program": "${workspaceFolder}/build/out/demo3",
+            "request": "launch",
+            "stopOnEntry": false,
+            "cwd": "${workspaceFolder}",
+            "args": [],
+            "env": {},
+            "initCommands": [
+                "command script import ${workspaceFolder}/image_viewer/lldb/debugview.py"
+            ]
+        }
     ],
     "inputs": [
         {
