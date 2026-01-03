@@ -3,7 +3,7 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
+    "configuration-templates": [
         {
             // https://learn.microsoft.com/en-us/visualstudio/debugger/debugger-feature-tour?view=vs-2022
             "name": "cpptools-msvc",
@@ -96,6 +96,20 @@
                 }
             ]
         }
+    ],
+    "configurations": [
+        {
+            // https://learn.microsoft.com/en-us/visualstudio/debugger/debugger-feature-tour?view=vs-2022
+            "name": "demo3",
+            "type": "cppvsdbg",
+            "program": "${workspaceFolder}/build/out/demo3.exe",
+            "request": "launch",
+            "stopAtEntry": false,
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "args": [],
+            "envFile": "${workspaceFolder}/build/out/demo3_Debug.env"
+        },
     ],
     "inputs": [
         {
