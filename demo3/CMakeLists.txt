@@ -24,5 +24,5 @@ target_link_libraries(demo3 PRIVATE ${OpenCV_LIBS})
 #message(STATUS "DEMO3_DLL_DIRS: ${DEMO3_DLL_DIRS}")
 
 #zzpkg_copy_required_dlls(demo3)
-#zzpkg_generate_debug_envfile(demo3)
+zzpkg_generate_debug_envfile(demo3)
 zzpkg_set_vs_debugger_environment(demo3)
