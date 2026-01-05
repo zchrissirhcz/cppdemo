@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run demo3 (MSVC)",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/out/demo3.exe",
+            "args": [
+                // "F:/pkgs/h264_data/0.1/3min_1080p.h264",
+            ],
+            "options": {
+                "env": {
+                    // "PATH": "F:/pkgs/OpenCV/4.12.0/vs2022-x64/bin;%PATH%"
+                }
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always"
+            }
+        }
+    ]
+}
