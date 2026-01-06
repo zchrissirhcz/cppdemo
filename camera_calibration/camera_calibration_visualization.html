@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>相机标定坐标系可视化 - Camera Calibration Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 
+                         'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .intro {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            line-height: 1.8;
+        }
+        
+        .intro h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .section {
+            margin-bottom: 60px;
+        }
+        
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .image-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .image-container img:hover {
+            transform: scale(1.02);
+        }
+        
+        .explanation {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+        
+        .explanation h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .explanation p {
+            color: #34495e;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+        
+        .formula {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .key-points {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .key-points h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .key-points ul {
+            margin-left: 20px;
+        }
+        
+        .key-points li {
+            color: #856404;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .coordinate-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .coordinate-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .coordinate-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        .coordinate-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .section-title {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📷 相机标定坐标系可视化</h1>
+        <p class="subtitle">Camera Calibration Coordinate System Visualization</p>
+        
+        <div class="intro">
+            <h2>🎯 什么是相机标定？</h2>
+            <p>
+                相机标定就是建立<strong>真实世界3D点</strong>到<strong>图像像素点</strong>的精确映射关系。
+                这个过程涉及多个坐标系的转换，每个坐标系都有其特定的含义和作用。
+            </p>
+            <p>
+                让我们通过可视化图表，一步步理解这些坐标系是如何转换的！
+            </p>
+        </div>
+        
+        <!-- 步骤1 -->
+        <div class="section">
+            <h2 class="section-title"><span class="step-number">1</span>世界坐标系 → 相机坐标系</h2>
+            
+            <div class="image-container">
+                <img src="camera_calibration_step1.png" alt="世界坐标系到相机坐标系转换">
+            </div>
+            
+            <div class="explanation">
+                <h3>📍 什么是世界坐标系？</h3>
+                <p>
+                    <strong>世界坐标系</strong>是描述真实世界中物体位置的参考系。比如：
+                </p>
+                <ul>
+                    <li>房间的角落可以设为原点 (0, 0, 0)</li>
+                    <li>桌子上的一个点可能是 (2, 1, 0.8) 米</li>
+                    <li>这个坐标系是<strong>全局的、固定的</strong></li>
+                </ul>
+            </div>
+            
+            <div class="explanation">
+                <h3>📸 什么是相机坐标系？</h3>
+                <p>
+                    <strong>相机坐标系</strong>是以相机光心为原点的坐标系：
+                </p>
+                <ul>
+                    <li>原点：相机的光心（镜头中心）</li>
+                    <li>Z轴：相机的朝向（拍摄方向）</li>
+                    <li>X、Y轴：与图像平面对应</li>
+                    <li>这个坐标系<strong>随相机移动而变化</strong></li>
+                </ul>
+            </div>
+            
+            <div class="explanation">
+                <h3>🔄 转换公式（外参）</h3>
+                <div class="formula">
+                    P_c = R · P_w + t
+                </div>
+                <p>
+                    其中：
+                </p>
+                <ul>
+                    <li><strong>R</strong>：旋转矩阵（3×3），描述相机在世界中的朝向</li>
+                    <li><strong>t</strong>：平移向量（3×1），描述相机在世界中的位置</li>
+                    <li><strong>[R|t]</strong>：合称为<strong>外参矩阵</strong></li>
+                </ul>
+            </div>
+            
+            <div class="key-points">
+                <h3>💡 直白理解</h3>
+                <ul>
+                    <li>世界坐标系就像<strong>房间的GPS坐标</strong>，固定不变</li>
+                    <li>相机坐标系就像<strong>你站在房间里的视角</strong>，随你移动而变化</li>
+                    <li>外参就是描述<strong>你站在房间的哪个位置、朝哪个方向看</strong></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 步骤2 -->
+        <div class="section">
+            <h2 class="section-title"><span class="step-number">2</span>相机坐标系 → 归一化图像平面</h2>
+            
+            <div class="image-container">
+                <img src="camera_calibration_step2.png" alt="相机坐标系到归一化图像平面转换">
+            </div>
+            
+            <div class="explanation">
+                <h3>🎯 什么是归一化图像平面？</h3>
+                <p>
+                    <strong>归一化图像平面</strong>是一个虚拟的平面，位于相机光心前方1米处（Z=1）：
+                </p>
+                <ul>
+                    <li>它是一个<strong>理想化的成像平面</strong>，不考虑镜头畸变</li>
+                    <li>坐标单位是<strong>米</strong>，不是像素</li>
+                    <li>平面上的点表示<strong>光线的方向</strong>（从光心发出的射线）</li>
+                </ul>
+            </div>
+            
+            <div class="explanation">
+                <h3>📐 透视投影公式</h3>
+                <div class="formula">
+                    x = X_c / Z_c<br>
+                    y = Y_c / Z_c
+                </div>
+                <p>
+                    这就是<strong>小孔成像原理</strong>的数学表达！
+                </p>
+                <ul>
+                    <li><strong>Z_c</strong>：点到相机的距离（深度）</li>
+                    <li><strong>x, y</strong>：归一化平面上的坐标</li>
+                    <li>越远的物体（Z_c越大），在图像上越小（x, y越小）</li>
+                </ul>
+            </div>
+            
+            <div class="key-points">
+                <h3>💡 直白理解</h3>
+                <ul>
+                    <li>想象你在相机光心放一个<strong>虚拟屏幕</strong>，距离1米</li>
+                    <li>真实世界的3D点通过<strong>光线投射</strong>到这个虚拟屏幕上</li>
+                    <li>这个虚拟屏幕就是归一化图像平面</li>
+                    <li>坐标是<strong>物理距离</strong>（米），不是像素</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 步骤3 -->
+        <div class="section">
+            <h2 class="section-title"><span class="step-number">3</span>归一化图像平面 → 畸变图像平面</h2>
+            
+            <div class="image-container">
+                <img src="camera_calibration_step3.png" alt="归一化图像平面到畸变图像平面转换">
+            </div>
+            
+            <div class="explanation">
+                <h3>🔍 什么是畸变？</h3>
+                <p>
+                    由于镜头制造和安装的误差，真实世界的直线在图像中会变弯或倾斜，这就是<strong>畸变</strong>：
+                </p>
+                <ul>
+                    <li><strong>径向畸变</strong>：离光心越远，畸变越严重（像鱼眼镜头）</li>
+                    <li><strong>切向畸变</strong>：镜头与传感器不平行导致</li>
+                </ul>
+            </div>
+            
+            <div class="explanation">
+                <h3>📊 畸变公式</h3>
+                <div class="formula">
+                    x' = x(1 + k₁r² + k₂r⁴ + k₃r⁶) + [2p₁xy + p₂(r² + 2x²)]<br>
+                    y' = y(1 + k₁r² + k₂r⁴ + k₃r⁶) + [p₁(r² + 2y²) + 2p₂xy]
+                </div>
+                <p>
+                    其中：
+                </p>
+                <ul>
+                    <li><strong>k₁, k₂, k₃</strong>：径向畸变系数</li>
+                    <li><strong>p₁, p₂</strong>：切向畸变系数</li>
+                    <li><strong>r² = x² + y²</strong>：点到光心的距离平方</li>
+                </ul>
+            </div>
+            
+            <div class="key-points">
+                <h3>💡 直白理解</h3>
+                <ul>
+                    <li><strong>桶形畸变</strong>（k₁ > 0）：图像边缘向外膨胀，像桶一样</li>
+                    <li><strong>枕形畸变</strong>（k₁ < 0）：图像边缘向内收缩，像枕头一样</li>
+                    <li>标定就是要算出这些畸变系数，然后<strong>反向修正</strong>畸变</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 步骤4 -->
+        <div class="section">
+            <h2 class="section-title"><span class="step-number">4</span>归一化图像平面 → 像素坐标系</h2>
+            
+            <div class="image-container">
+                <img src="camera_calibration_step4.png" alt="归一化图像平面到像素坐标系转换">
+            </div>
+            
+            <div class="explanation">
+                <h3>🖼️ 什么是像素坐标系？</h3>
+                <p>
+                    <strong>像素坐标系</strong>就是数字图像的坐标系：
+                </p>
+                <ul>
+                    <li>原点通常在图像左上角</li>
+                    <li>坐标单位是<strong>像素</strong>（如640×480）</li>
+                    <li>这就是你<strong>最终看到的图像</strong></li>
+                </ul>
+            </div>
+            
+            <div class="explanation">
+                <h3>📏 内参矩阵</h3>
+                <div class="formula">
+                    K = [ f_x  s  c_x ]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[  0  f_y c_y ]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[  0   0   1  ]
+                </div>
+                <p>
+                    其中：
+                </p>
+                <ul>
+                    <li><strong>f_x, f_y</strong>：焦距（单位：像素）</li>
+                    <li><strong>c_x, c_y</strong>：主点坐标（光心在图像上的投影位置）</li>
+                    <li><strong>s</strong>：像素偏斜因子（理想情况下为0）</li>
+                </ul>
+            </div>
+            
+            <div class="explanation">
+                <h3>🔄 转换公式</h3>
+                <div class="formula">
+                    u = f_x · x + c_x<br>
+                    v = f_y · y + c_y
+                </div>
+                <p>
+                    这就是将<strong>物理坐标（米）</strong>转换为<strong>像素坐标</strong>的公式！
+                </p>
+            </div>
+            
+            <div class="key-points">
+                <h3>💡 直白理解</h3>
+                <ul>
+                    <li><strong>焦距</strong>：决定图像的放大倍数（焦距越大，物体越大）</li>
+                    <li><strong>主点</strong>：图像的中心点（通常是图像宽高的一半）</li>
+                    <li>内参就是描述<strong>相机本身的物理特性</strong>（镜头、传感器等）</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 完整流程 -->
+        <div class="section">
+            <h2 class="section-title">🔄 完整转换流程</h2>
+            
+            <div class="image-container">
+                <img src="camera_calibration_complete.png" alt="完整转换流程">
+            </div>
+            
+            <div class="explanation">
+                <h3>📋 总结</h3>
+                <table class="coordinate-table">
+                    <thead>
+                        <tr>
+                            <th>坐标系</th>
+                            <th>单位</th>
+                            <th>含义</th>
+                            <th>转换参数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>世界坐标系</strong></td>
+                            <td>米</td>
+                            <td>真实世界中的位置</td>
+                            <td>外参 [R|t]</td>
+                        </tr>
+                        <tr>
+                            <td><strong>相机坐标系</strong></td>
+                            <td>米</td>
+                            <td>相对于相机的位置</td>
+                            <td>透视投影</td>
+                        </tr>
+                        <tr>
+                            <td><strong>归一化图像平面</strong></td>
+                            <td>米</td>
+                            <td>虚拟成像平面</td>
+                            <td>畸变系数</td>
+                        </tr>
+                        <tr>
+                            <td><strong>畸变图像平面</strong></td>
+                            <td>米</td>
+                            <td>考虑镜头畸变</td>
+                            <td>内参矩阵 K</td>
+                        </tr>
+                        <tr>
+                            <td><strong>像素坐标系</strong></td>
+                            <td>像素</td>
+                            <td>最终图像位置</td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="image-container">
+                <img src="camera_calibration_summary.png" alt="总结图">
+            </div>
+        </div>
+        
+        <!-- 相机标定的目标 -->
+        <div class="section">
+            <h2 class="section-title">🎯 相机标定的目标</h2>
+            
+            <div class="explanation">
+                <h3>📝 问题定义</h3>
+                <p>
+                    已知：
+                </p>
+                <ul>
+                    <li>一组世界坐标系中的3D点 P_w（如棋盘格的角点）</li>
+                    <li>对应的图像像素坐标 p(u,v)</li>
+                </ul>
+                <p>
+                    求解：
+                </p>
+                <ul>
+                    <li>内参矩阵 K（焦距、主点等）</li>
+                    <li>畸变系数（k₁, k₂, k₃, p₁, p₂）</li>
+                    <li>外参矩阵 [R|t]（每张标定图像对应一组）</li>
+                </ul>
+            </div>
+            
+            <div class="explanation">
+                <h3>🎯 优化目标</h3>
+                <div class="formula">
+                    min Σ || p_actual - p_predicted ||²
+                </div>
+                <p>
+                    最小化<strong>重投影误差</strong>：实际像素点与理论投影点之间的距离。
+                </p>
+            </div>
+            
+            <div class="key-points">
+                <h3>💡 为什么需要标定？</h3>
+                <ul>
+                    <li><strong>修正畸变</strong>：让直线变直，图像更真实</li>
+                    <li><strong>3D测量</strong>：从2D图像反推3D位置</li>
+                    <li><strong>AR应用</strong>：准确地将虚拟物体放置在真实场景中</li>
+                    <li><strong>机器人导航</strong>：让机器人准确理解环境</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <a href="#top" class="nav-btn">⬆️ 返回顶部</a>
+        </div>
+    </div>
+</body>
+</html>
