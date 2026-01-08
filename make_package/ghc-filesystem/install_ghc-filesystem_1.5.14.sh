@@ -23,5 +23,5 @@ fi
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"
 
 # copy header files
-mkdir -p ${ZZPKG_ROOT}/ghc-filesystem/1.5.14
-cp -R ${source_dir}/include ${ZZPKG_ROOT}/ghc-filesystem/1.5.14/inc
+mkdir -p ${ZZPKG_ROOT}/ghc-filesystem/${version}
+cp -R ${source_dir}/include ${ZZPKG_ROOT}/ghc-filesystem/${version}/inc

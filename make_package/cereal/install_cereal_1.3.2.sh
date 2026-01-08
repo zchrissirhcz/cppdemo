@@ -23,5 +23,5 @@ fi
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"
 
 # copy header files
-mkdir -p ${ZZPKG_ROOT}/cereal/1.3.2
-cp -R ${source_dir}/include ${ZZPKG_ROOT}/cereal/1.3.2/inc
+mkdir -p ${ZZPKG_ROOT}/cereal/${version}
+cp -R ${source_dir}/include ${ZZPKG_ROOT}/cereal/${version}/inc

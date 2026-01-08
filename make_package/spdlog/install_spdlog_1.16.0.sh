@@ -24,5 +24,5 @@ fi
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"
 
 # copy header files
-mkdir -p ${ZZPKG_ROOT}/spdlog/1.16.0
-cp -R ${source_dir}/include ${ZZPKG_ROOT}/spdlog/1.16.0/inc
+mkdir -p ${ZZPKG_ROOT}/spdlog/${version}
+cp -R ${source_dir}/include ${ZZPKG_ROOT}/spdlog/${version}/inc

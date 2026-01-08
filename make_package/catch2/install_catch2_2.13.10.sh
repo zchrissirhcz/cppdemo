@@ -24,5 +24,5 @@ fi
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"
 
 # Catch2 v2.x 只需复制单头文件，无需 CMake 构建
-mkdir -p ${ZZPKG_ROOT}/catch2/2.13.10/inc/catch2
-cp ${source_dir}/single_include/catch2/catch.hpp ${ZZPKG_ROOT}/catch2/2.13.10/inc/catch2/catch.hpp
+mkdir -p ${ZZPKG_ROOT}/catch2/${version}/inc/catch2
+cp ${source_dir}/single_include/catch2/catch.hpp ${ZZPKG_ROOT}/catch2/${version}/inc/catch2/catch.hpp

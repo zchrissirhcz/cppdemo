@@ -24,7 +24,7 @@ fi
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"
 
 # copy header files
-mkdir -p ${ZZPKG_ROOT}/Eigen/3.4.0/inc
-cp -R ${source_dir}/Eigen ${ZZPKG_ROOT}/Eigen/3.4.0/inc
-mkdir -p ${ZZPKG_ROOT}/Eigen/3.4.0/inc/unsupported
-cp -R ${source_dir}/unsupported/Eigen ${ZZPKG_ROOT}/Eigen/3.4.0/inc/unsupported
+mkdir -p ${ZZPKG_ROOT}/Eigen/${version}/inc
+cp -R ${source_dir}/Eigen ${ZZPKG_ROOT}/Eigen/${version}/inc
+mkdir -p ${ZZPKG_ROOT}/Eigen/${version}/inc/unsupported
+cp -R ${source_dir}/unsupported/Eigen ${ZZPKG_ROOT}/Eigen/${version}/inc/unsupported

@@ -33,5 +33,5 @@ CMAKE_OPTIONS=(
 cmake -S ${source_dir} -B build "${CMAKE_OPTIONS[@]}"
 cmake --build build --config Release --target install
 cmake --install build
-mkdir -p ${ZZPKG_ROOT}/CLI11/2.6.1/inc/CLI
-cp ./build/install/include/CLI11.hpp ${ZZPKG_ROOT}/CLI11/2.6.1/inc/CLI/CLI11.hpp
+mkdir -p ${ZZPKG_ROOT}/CLI11/${version}/inc/CLI
+cp ./build/install/include/CLI11.hpp ${ZZPKG_ROOT}/CLI11/${version}/inc/CLI/CLI11.hpp

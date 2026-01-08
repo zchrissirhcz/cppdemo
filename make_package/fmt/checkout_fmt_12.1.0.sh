@@ -23,5 +23,5 @@ fi
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"
 
 # copy header files
-mkdir -p ${ZZPKG_ROOT}/fmt/12.1.0
-cp -R ${source_dir}/include ${ZZPKG_ROOT}/fmt/12.1.0/inc
+mkdir -p ${ZZPKG_ROOT}/fmt/${version}
+cp -R ${source_dir}/include ${ZZPKG_ROOT}/fmt/${version}/inc
