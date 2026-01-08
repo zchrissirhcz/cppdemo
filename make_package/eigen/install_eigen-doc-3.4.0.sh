@@ -23,14 +23,14 @@ if [[ -d "$DST_DIR" && -f "$DST_DIR/index.html" ]]; then
         # Still create shortcut on Windows
         if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
             echo ""
-    bash "$(dirname "$0")/../create-doc-shortcuts.sh" \
-        --doc-dir "eigen-doc" \
-        --shortcut-name "Eigen-Doc" \
-        --description "Eigen Documentation"
+            bash "$(dirname "$0")/../create-doc-shortcuts.sh" \
+                --doc-dir "eigen-doc" \
+                --shortcut-name "Eigen-Doc" \
+                --description "Eigen Documentation"
+        fi
         
         echo "Documentation location: $DST_DIR"
         exit 0
-    fi
 fi
 
 # if not exist eigen-doc.tgz, download it

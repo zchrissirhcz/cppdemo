@@ -31,8 +31,10 @@ if [[ -d "$DST_DIR" && -f "$DST_DIR/zh/index.html" ]]; then
         # Still create shortcut
         if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$OSTYPE" == "cygwin" ]]; then
             echo ""
-            echo "Creating Windows Start Menu shortcut..."
-            bash "$(dirname "$0")/create-windows-shortcuts.sh"
+            bash "$(dirname "$0")/../create-doc-shortcuts.sh" \
+                --doc-dir "cppreference-doc-zh" \
+                --shortcut-name "CppReference-CN" \
+                --description "C++ 参考手册"
         fi
         exit 0
     fi

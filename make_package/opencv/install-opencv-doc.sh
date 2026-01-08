@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+work_dir=$(pwd)
 
 # === Main ===
 VERSION="4.12.0"
@@ -20,7 +21,10 @@ if [[ -d "$DST_DIR" && -f "$DST_DIR/index.html" ]]; then
         # Still create shortcut on Windows
         if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
             echo ""
-            bash "$(dirname "$0")/create-windows-shortcuts.sh"
+            bash "$(dirname "$0")/../create-doc-shortcuts.sh" \
+                --doc-dir "opencv-doc" \
+                --shortcut-name "OpenCV-Doc" \
+                --description "OpenCV Documentation"
         fi
         
         echo "Documentation location: $DST_DIR"

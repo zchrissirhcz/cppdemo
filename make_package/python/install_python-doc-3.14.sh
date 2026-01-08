@@ -30,8 +30,10 @@ if [[ -d "$DST_DIR" && -f "$DST_DIR/index.html" ]]; then
         # Still create shortcut
         if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$OSTYPE" == "cygwin" ]]; then
             echo ""
-            echo "Creating Windows Start Menu shortcut..."
-            bash "$(dirname "$0")/create-windows-shortcuts.sh"
+            bash "$(dirname "$0")/../create-doc-shortcuts.sh" \
+                --doc-dir "python-doc" \
+                --shortcut-name "Python-Doc" \
+                --description "Python Documentation"
         fi
         exit 0
     fi
