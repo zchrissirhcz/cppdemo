@@ -320,8 +320,19 @@ endmacro()
 
 macro(zzpkg_setup_for_msvc)
   if(MSVC)
-    # Correctly print UTF-8 characters in MSVC output console
-    add_compile_options("/source-charset:utf-8")
+    # Fix compile warning C4819 for source files with non-ASCII characters
+    # Without this, the generated .sln use _MBCS (multi-byte-char) instead of _UNICODE
+    add_compile_definitions(UNICODE _UNICODE)
+
+    # Tell compiler to treat source files as UTF-8 encoded when they are saving with utf-8 encoding
+    # This also fix compile warning C4819 for source files with non-ASCII characters
+    # add_compile_options("/source-charset:utf-8")
+
+    # Tell compiler to use UTF-8 for execution charset (e.g. string literals in source code)
+    # add_compile_options("/execution-charset:utf-8")
+
+    # combine the above two options
+    add_compile_options("/utf-8")
 
     # avoid MSVC compile error C2065: 'M_PI': undeclared identifier
     add_compile_definitions(_USE_MATH_DEFINES)
