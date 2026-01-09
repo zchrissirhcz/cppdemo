@@ -3,3 +3,4 @@ build-*/
 .pkgs/
 *.zip
 *.tar.gz
+shared_memory/

@@ -5,7 +5,7 @@
     // "cmake.configureArgs": [
     //     "-T host=x64"
     // ],
-    // "cmake.generator": "Ninja",
+    //"cmake.generator": "Ninja",
 
 
     // linux-gdb
@@ -55,7 +55,10 @@
     },
     "lldb.library": "/Library/Developer/CommandLineTools/Library/PrivateFrameworks/LLDB.framework/Versions/A/LLDB",
     "files.associations": {
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "type_traits": "cpp",
+        "iostream": "cpp",
+        "random": "cpp"
     },
 
 
