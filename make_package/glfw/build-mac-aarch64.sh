@@ -10,14 +10,14 @@ build_dir="$work_dir/build-mac-aarch64"
 # [ -d "$build_dir" ] && rm -rf "$build_dir"
 
 CMAKE_GENERATOR_OPTIONS=(
-      -G"Ninja"
+    -G"Ninja"
 )
 
 : "${ZZPKG_ROOT:=$HOME/.zzpkg}"
 install_dir="$ZZPKG_ROOT/$pkg_name/$version/mac-aarch64"
 cmake "${CMAKE_GENERATOR_OPTIONS[@]}" "${CMAKE_OPTIONS[@]}" \
-      -DCMAKE_INSTALL_PREFIX="$install_dir" \
-      -DCMAKE_BUILD_TYPE=Release \
-      -S "$source_dir" -B "$build_dir" -Wno-deprecated
+    -DCMAKE_INSTALL_PREFIX="$install_dir" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -S "$source_dir" -B "$build_dir" -Wno-deprecated
 cmake --build "$build_dir" --config Release
 cmake --build "$build_dir" --target install --config Release
