@@ -20,8 +20,9 @@ if [[ -z "$SKIP_CLONE" ]]; then
         "$tag"
 fi
 
-: "${ZZPKG_ROOT:=$HOME/.zzpkg}"
-
-# copy header files
-mkdir -p ${ZZPKG_ROOT}/fmt/${version}
-cp -R ${source_dir}/include ${ZZPKG_ROOT}/fmt/${version}/inc
+CMAKE_OPTIONS=(
+    -DFMT_UNICODE=OFF
+    -DFMT_TEST=OFF
+    -DFMT_DEBUG_POSTFIX=_d
+    -DFMT_UNICODE=ON
+)
