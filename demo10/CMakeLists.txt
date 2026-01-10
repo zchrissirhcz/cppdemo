@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(demo10)
 
+if(MSVC)
+  return()
+endif()
 zzpkg_find(OpenCV/4.12.0)
 
 add_executable(demo10_writer writer.cpp)
