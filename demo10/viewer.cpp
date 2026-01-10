@@ -9,7 +9,7 @@
 int main()
 {
     const char* sharedMemName = "/sharedImage";
-    const int bufSize = 1024 * 768 * 3;
+    const int bufSize = sizeof(SharedImage);
 
     // open existing shared memory object
     int fd = shm_open(sharedMemName, O_RDONLY, 0666);
@@ -21,7 +21,7 @@ int main()
     }
 
     // map to process address space (read-only)
-    void* pBuf = mmap(NULL, bufSize, PROT_READ, MAP_SHARED, fd, 0);
+    SharedImage* pBuf = (SharedImage*)mmap(NULL, bufSize, PROT_READ, MAP_SHARED, fd, 0);
     if (pBuf == MAP_FAILED)
     {
         printf("mmap failed\n");
@@ -33,9 +33,7 @@ int main()
     {
         // read data
         printf("Reader: Read %d bytes from shared memory\n", bufSize);
-        ImageInfo imgInfo{};
-        memcpy(&imgInfo, pBuf, sizeof(ImageInfo));
-        cv::Mat image(imgInfo.height, imgInfo.width, CV_8UC(imgInfo.channels), (char*)pBuf + sizeof(ImageInfo));
+        cv::Mat image(pBuf->height, pBuf->width, CV_8UC(pBuf->channels), pBuf->imgData);
         cv::imshow("Shared Image", image);
         cv::waitKey(0);
     }

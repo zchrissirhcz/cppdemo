@@ -12,7 +12,7 @@
 int main()
 {
     const char* sharedMemName = "/sharedImage";
-    const int bufSize = 1024 * 768 * 3;
+    const int bufSize = sizeof(SharedImage);
 
     // clean up any existing shared memory object
     shm_unlink(sharedMemName);
@@ -36,7 +36,7 @@ int main()
     }
 
     // map to process address space
-    void* pBuf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    SharedImage* pBuf = (SharedImage*)mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (pBuf == MAP_FAILED)
     {
         printf("mmap failed\n");
@@ -74,13 +74,15 @@ int main()
             printf("Image size exceeds shared memory buffer size\n");
             continue;
         }
-        //memcpy(pBuf, image.data, bufSize);
-        ImageInfo imgInfo{};
-        imgInfo.width = image.cols;
-        imgInfo.height = image.rows;
-        imgInfo.channels = image.channels();
-        memcpy(pBuf, &imgInfo, sizeof(ImageInfo));
-        memcpy((char*)pBuf + sizeof(ImageInfo), image.data, image.total() * image.elemSize());
+        if (image.cols * image.rows * image.channels() > MAX_IMAGE_BUF_SIZE)
+        {
+            printf("Image size exceeds maximum supported size\n");
+            continue;
+        }
+        pBuf->width = image.cols;
+        pBuf->height = image.rows;
+        pBuf->channels = image.channels();
+        memcpy(pBuf->imgData, image.data, image.total() * image.elemSize());
 
         printf("Writer: Wrote image data to shared memory\n");
         printf("Writer: Press Enter to write next image...\n");
