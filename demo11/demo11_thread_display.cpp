@@ -11,7 +11,7 @@ cv::Mat currentImage;
 bool hasNewImage = false;
 std::atomic<bool> shouldExit(false);
 
-// 显示线程：在子线程中运行 OpenCV 窗口（Windows可能可以，macOS不行）
+// 显示线程：在子线程中运行 OpenCV 窗口（Windows可以，macOS不行）
 void displayThreadFunc()
 {
     std::cout << "Display thread started (thread ID: " << std::this_thread::get_id() << ")\n";

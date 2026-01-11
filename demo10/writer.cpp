@@ -8,6 +8,7 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 #include "image_info.h"
+#include <semaphore.h>
 
 int main()
 {
@@ -41,6 +42,18 @@ int main()
     {
         printf("mmap failed\n");
         close(fd);
+        return 1;
+    }
+
+    // initialize semaphore
+    sem_t* mutexSem = sem_open("/sharedImageMutex", O_CREAT, 0666, 1); // resoure is available
+    sem_t* notifySem = sem_open("/sharedImageNotify", O_CREAT, 0666, 0); // no new data yet
+    if (mutexSem == SEM_FAILED || notifySem == SEM_FAILED)
+    {
+        printf("sem_open failed\n");
+        munmap(pBuf, bufSize);
+        close(fd);
+        shm_unlink(sharedMemName);
         return 1;
     }
 
@@ -79,10 +92,13 @@ int main()
             printf("Image size exceeds maximum supported size\n");
             continue;
         }
+        sem_wait(mutexSem); // lock
         pBuf->width = image.cols;
         pBuf->height = image.rows;
         pBuf->channels = image.channels();
         memcpy(pBuf->imgData, image.data, image.total() * image.elemSize());
+        sem_post(mutexSem); // unlock
+        sem_post(notifySem); // notify new data available
 
         printf("Writer: Wrote image data to shared memory\n");
         printf("Writer: Press Enter to write next image...\n");
@@ -95,6 +111,11 @@ int main()
     munmap(pBuf, bufSize);
     close(fd);
     shm_unlink(sharedMemName);
+
+    sem_close(mutexSem);
+    sem_close(notifySem);
+    sem_unlink("/sharedImageMutex");
+    sem_unlink("/sharedImageNotify");
 
     return 0;
 }
