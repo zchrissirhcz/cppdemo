@@ -31,6 +31,9 @@ public:
         //
         // https://github.com/microsoft/STL/issues/2646
         // C:\Program Files (x86)\Windows Kits\10\Source\10.0.26100.0\ucrt\lowio\read.cpp, line 152
+        // call stack:
+        // std::getline() => std::istream::getline() => std::streambuf::sgetc() => std::filebuf::underflow() => _IO_file_xsgetn => fread() => fread_s() => _fread_nolock_s() => _read_nolock() => translate_text_mode_nolock()
+        // https://github.com/microsoft/STL/blob/c865e85d77b9c802359212e8371c65a2f9d44722/stl/inc/string#L38C70-L38C75
         // this usually happens when GCC/Clang reading a text file which use CRLF as ending, most probably generated on Windows
         // and make it look like: "Linux GCC std::getline() keeps the annoying '\r' ending char, weird"
         if (!line.empty() && line.back() == '\r')
