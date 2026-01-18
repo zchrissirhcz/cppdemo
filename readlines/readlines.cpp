@@ -29,17 +29,9 @@ int main()
     while (std::getline(file, line))
     {
         line_num++;
-        // MSVC drop '\n' and '\r', so after std::getline() it gives line without '\r' and '\n'
-        // but GCC/Clang on Linux drop only '\n', i.e. keeps '\r' at the end of the line
-        // and `\r` is not visible if you just print it in console, which may lead to confusion, e.g.
-        // - reading an image file, but failed because of extra '\r' in the file path
-        // - comparing two strings read from two files, but failed because of extra '\r' in one string
-        // - etc.
-        // so, when reading a CRLF text file (often created on Windows) with GCC/Clang on Linux,
-        // we should always check and remove '\r' at the end of the line
         if (!line.empty() && line.back() == '\r')
         {
-            line.pop_back(); // remove trailing '\r'
+            line.pop_back();
             printf("found \\r at the end of line %d\n", line_num);
         }
         //printf("%s\n", line.c_str());
