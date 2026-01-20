@@ -1,9 +1,9 @@
 #include <stdio.h>
 
 #if defined(_MSC_VER) && defined(_MSVC_LANG)
-#define MY_CPP_STD _MSVC_LANG   // MSVC 下用真实值
+#   define MY_CPP_STD _MSVC_LANG   // MSVC 下用真实值
 #else
-#define MY_CPP_STD __cplusplus  // 其它编译器/开启了 /Zc:__cplusplus
+#   define MY_CPP_STD __cplusplus  // 其它编译器/开启了 /Zc:__cplusplus
 #endif
 
 // 便捷判断
