@@ -21,3 +21,8 @@ if [[ -z "$SKIP_CLONE" ]]; then
         "$work_dir/pystring" \
         "$sha"
 fi
+
+# === Patch ===
+cp CMakeLists.txt pystring/
+mkdir -p pystring/cmake
+cp pystringConfig.cmake.in pystring/cmake/
