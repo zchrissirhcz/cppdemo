@@ -29,6 +29,8 @@ int main()
     while (reader.getline(line))
     {
         CPPDEMO_REQUIRE(line.back() != '\r');
+        const std::string& last_line = reader.get_last_line();
+        printf("last line: %s\n", last_line.c_str());
     }
     return 0;
 }
