@@ -166,13 +166,17 @@ macro(zzpkg_find PACKAGE_RECIPE)
 
     message(STATUS "  try find package with pkg_root: ${pkg_root}")
     if(EXISTS "${pkg_root}/inc")
-      add_library(${pkg_name} INTERFACE)
-      target_include_directories(${pkg_name} INTERFACE "${pkg_platform_independent_root}/inc")
-      set_target_properties(${pkg_name} PROPERTIES
-        VERSION ${pkg_version}
-      )
-      add_library(zzpkg::${pkg_name} ALIAS ${pkg_name})
-      message(STATUS "  created INTERFACE target: zzpkg::${pkg_name}")
+      if(TARGET ${pkg_name})
+        message(STATUS "  target ${pkg_name} already exists, skip creating target")
+      else()
+        add_library(${pkg_name} INTERFACE)
+        target_include_directories(${pkg_name} INTERFACE "${pkg_platform_independent_root}/inc")
+        set_target_properties(${pkg_name} PROPERTIES
+          VERSION ${pkg_version}
+        )
+        add_library(zzpkg::${pkg_name} ALIAS ${pkg_name})
+        message(STATUS "  created INTERFACE target: zzpkg::${pkg_name}")
+      endif()
       set(pkg_found TRUE)
       break()
     endif()
